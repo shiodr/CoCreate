@@ -24,7 +24,7 @@ function require_login(): void
 function require_admin(): void
 {
     if (!is_admin()) {
-        header('Location: ../login.php');
+        header('Location: ../pages/login.php');
         exit;
     }
 }
