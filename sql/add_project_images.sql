@@ -1,2 +1,0 @@
-ALTER TABLE projects
-  ADD COLUMN project_image VARCHAR(255) DEFAULT NULL;

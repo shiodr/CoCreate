@@ -36,27 +36,9 @@ require_once __DIR__ . '/../includes/header.php';
   </div>
   <div class="cards-grid">
     <?php foreach ($recent as $project): ?>
-      <article class="card project-card">
-        <a class="project-image-link" href="project.php?id=<?= (int)$project['project_id'] ?>">
-          <?php if (!empty($project['project_image'])): ?>
-            <img class="project-image" src="../<?= e($project['project_image']) ?>" alt="<?= e($project['project_title']) ?>">
-          <?php else: ?>
-            <span class="project-image project-image-placeholder" data-category="<?= e($project['category']) ?>"><strong><?= e(substr($project['project_title'], 0, 1)) ?></strong></span>
-          <?php endif; ?>
-        </a>
-        <div class="card-meta">
-          <span class="status status-<?= e($project['project_status']) ?>"><?= e(status_label($project['project_status'])) ?></span>
-          <span><?= e(date('M j, Y', strtotime($project['created_at']))) ?></span>
-        </div>
-        <h3><a href="project.php?id=<?= (int)$project['project_id'] ?>"><?= e($project['project_title']) ?></a></h3>
-        <p><?= e(excerpt($project['description'], 140)) ?></p>
-        <p class="muted">Created by @<?= e($project['username']) ?></p>
-        <div class="tag-row">
-          <?php foreach (array_filter(array_map('trim', explode(',', $project['required_skills']))) as $skill): ?>
-            <span class="tag"><?= e($skill) ?></span>
-          <?php endforeach; ?>
-        </div>
-      </article>
+      <?php render_project_card($project, [
+          'meta' => 'Created by @' . $project['username'],
+      ]); ?>
     <?php endforeach; ?>
     <?php if (!$recent): ?>
       <p class="muted">No projects yet. Start the first one.</p>

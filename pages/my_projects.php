@@ -64,30 +64,21 @@ require_once __DIR__ . '/../includes/header.php';
   <h2>Your projects</h2>
   <div class="cards-grid">
     <?php foreach ($projects as $project): ?>
-      <article class="card project-card">
-        <a class="project-image-link" href="project.php?id=<?= (int)$project['project_id'] ?>">
-          <?php if (!empty($project['project_image'])): ?>
-            <img class="project-image" src="../<?= e($project['project_image']) ?>" alt="<?= e($project['project_title']) ?>">
-          <?php else: ?>
-            <span class="project-image project-image-placeholder" data-category="<?= e($project['category']) ?>"><strong><?= e(substr($project['project_title'], 0, 1)) ?></strong></span>
-          <?php endif; ?>
-        </a>
-        <div class="card-meta">
-          <span class="status status-<?= e($project['project_status']) ?>"><?= e(status_label($project['project_status'])) ?></span>
-          <span><?= e(date('M j, Y', strtotime($project['created_at']))) ?></span>
-        </div>
-        <h3><a href="project.php?id=<?= (int)$project['project_id'] ?>"><?= e($project['project_title']) ?></a></h3>
-        <p><?= e(excerpt($project['description'], 130)) ?></p>
-        <div class="button-row">
-          <a class="btn btn-secondary" href="edit_project.php?id=<?= (int)$project['project_id'] ?>">Edit</a>
-          <form method="post" data-confirm="Delete this project? This cannot be undone.">
-            <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
-            <input type="hidden" name="action" value="delete_project">
-            <input type="hidden" name="project_id" value="<?= (int)$project['project_id'] ?>">
-            <button class="btn btn-danger" type="submit">Delete</button>
-          </form>
-        </div>
-      </article>
+      <?php ob_start(); ?>
+      <div class="button-row">
+        <a class="btn btn-secondary" href="edit_project.php?id=<?= (int)$project['project_id'] ?>">Edit</a>
+        <form method="post" data-confirm="Delete this project? This cannot be undone.">
+          <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
+          <input type="hidden" name="action" value="delete_project">
+          <input type="hidden" name="project_id" value="<?= (int)$project['project_id'] ?>">
+          <button class="btn btn-danger" type="submit">Delete</button>
+        </form>
+      </div>
+      <?php render_project_card($project, [
+          'excerpt_length' => 130,
+          'show_skills' => false,
+          'footer_html' => ob_get_clean(),
+      ]); ?>
     <?php endforeach; ?>
     <?php if (!$projects): ?><div class="empty-state">You have not created any projects yet.</div><?php endif; ?>
   </div>

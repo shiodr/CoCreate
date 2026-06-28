@@ -27,22 +27,14 @@ require_once __DIR__ . '/../includes/header.php';
 <?php else: ?>
   <div class="cards-grid">
     <?php foreach ($requests as $request): ?>
-      <article class="card project-card">
-        <a class="project-image-link" href="project.php?id=<?= (int)$request['project_id'] ?>">
-          <?php if (!empty($request['project_image'])): ?>
-            <img class="project-image" src="../<?= e($request['project_image']) ?>" alt="<?= e($request['project_title']) ?>">
-          <?php else: ?>
-            <span class="project-image project-image-placeholder" data-category="<?= e($request['category']) ?>"><strong><?= e(substr($request['project_title'], 0, 1)) ?></strong></span>
-          <?php endif; ?>
-        </a>
-        <div class="card-meta">
-          <span class="status status-<?= e($request['request_status']) ?>"><?= e(status_label($request['request_status'])) ?></span>
-          <span><?= e(date('M j, Y', strtotime($request['created_at']))) ?></span>
-        </div>
-        <h3><a href="project.php?id=<?= (int)$request['project_id'] ?>"><?= e($request['project_title']) ?></a></h3>
-        <p class="muted">Owner @<?= e($request['owner']) ?> - <?= e($request['category']) ?></p>
-        <p><?= e($request['message'] ?: 'No message provided.') ?></p>
-      </article>
+      <?php ob_start(); ?>
+      <p><?= e($request['message'] ?: 'No message provided.') ?></p>
+      <?php render_project_card($request, [
+          'status_key' => 'request_status',
+          'show_skills' => false,
+          'meta' => 'Owner @' . $request['owner'] . ' - ' . $request['category'],
+          'footer_html' => ob_get_clean(),
+      ]); ?>
     <?php endforeach; ?>
   </div>
 <?php endif; ?>

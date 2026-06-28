@@ -55,11 +55,7 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 <article class="detail-layout">
   <section class="card detail-card">
-    <?php if (!empty($project['project_image'])): ?>
-      <img class="detail-image" src="../<?= e($project['project_image']) ?>" alt="<?= e($project['project_title']) ?>">
-    <?php else: ?>
-      <div class="detail-image detail-image-placeholder" data-category="<?= e($project['category']) ?>"><strong><?= e(substr($project['project_title'], 0, 1)) ?></strong></div>
-    <?php endif; ?>
+    <?php render_project_media($project, 'detail-image'); ?>
     <div class="card-meta">
       <span class="status status-<?= e($project['project_status']) ?>"><?= e(status_label($project['project_status'])) ?></span>
       <span><?= e(date('M j, Y', strtotime($project['created_at']))) ?></span>
@@ -68,11 +64,7 @@ require_once __DIR__ . '/../includes/header.php';
     <p class="muted">By <?= e($project['firstname'] . ' ' . $project['lastname']) ?> (@<?= e($project['username']) ?>)</p>
     <p><?= nl2br(e($project['description'])) ?></p>
     <h3>Required skills</h3>
-    <div class="tag-row">
-      <?php foreach (array_filter(array_map('trim', explode(',', $project['required_skills']))) as $skill): ?>
-        <span class="tag"><?= e($skill) ?></span>
-      <?php endforeach; ?>
-    </div>
+    <?php render_skill_tags($project['required_skills']); ?>
     <p><strong>Category:</strong> <?= e($project['category']) ?></p>
   </section>
 

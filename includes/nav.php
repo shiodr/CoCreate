@@ -6,7 +6,10 @@ $current = basename($_SERVER['PHP_SELF'] ?? '');
 <header class="site-header">
   <nav class="nav container">
     <a class="brand" href="<?= e($pageRoot) ?>index.php">CoCreate</a>
-    <button class="nav-toggle" type="button" aria-label="Open navigation" data-nav-toggle>
+    <button class="theme-toggle" type="button" aria-label="Switch to dark mode" data-theme-toggle>
+      <span class="theme-toggle-icon" aria-hidden="true"></span>
+    </button>
+    <button class="nav-toggle" type="button" aria-label="Open navigation" aria-expanded="false" data-nav-toggle>
       <span></span><span></span><span></span>
     </button>
     <div class="nav-links" data-nav-links>

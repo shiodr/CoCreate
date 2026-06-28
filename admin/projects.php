@@ -46,11 +46,7 @@ require_once __DIR__ . '/../includes/header.php';
       <tr>
         <td>
           <div class="table-project">
-            <?php if (!empty($project['project_image'])): ?>
-              <img src="../<?= e($project['project_image']) ?>" alt="<?= e($project['project_title']) ?>">
-            <?php else: ?>
-              <span><?= e(substr($project['project_title'], 0, 1)) ?></span>
-            <?php endif; ?>
+            <?php render_project_media($project, 'table-thumb'); ?>
             <a href="<?= e($pagePrefix ?? '../pages/') ?>project.php?id=<?= (int)$project['project_id'] ?>"><?= e($project['project_title']) ?></a>
           </div>
         </td>

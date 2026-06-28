@@ -6,7 +6,6 @@ require_once __DIR__ . '/../includes/db.php';
 $assetPrefix = '../';
 $pagePrefix = '';
 $adminPrefix = '../admin/';
-$uploadPrefix = '../';
 
 $uid = current_user_id();
 $stmt = $pdo->prepare('SELECT * FROM users WHERE user_id = ?');
@@ -95,17 +94,13 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="profile-layout">
   <aside class="card profile-card">
     <?php if (!empty($user['profile_picture'])): ?>
-      <img class="avatar" src="<?= e(($uploadPrefix ?? '') . $user['profile_picture']) ?>" alt="Profile picture">
+      <img class="avatar" src="<?= e(($publicPrefix ?? '../') . $user['profile_picture']) ?>" alt="Profile picture">
     <?php else: ?>
       <div class="avatar placeholder"><?= e(substr($user['firstname'], 0, 1) . substr($user['lastname'], 0, 1)) ?></div>
     <?php endif; ?>
     <h2><?= e($user['firstname'] . ' ' . $user['lastname']) ?></h2>
     <p class="muted">@<?= e($user['username']) ?></p>
-    <div class="tag-row">
-      <?php foreach (array_filter(array_map('trim', explode(',', $user['skills'] ?? ''))) as $skill): ?>
-        <span class="tag"><?= e($skill) ?></span>
-      <?php endforeach; ?>
-    </div>
+    <?php render_skill_tags($user['skills'] ?? ''); ?>
   </aside>
 
   <form class="card form-card" method="post" enctype="multipart/form-data" data-validate>

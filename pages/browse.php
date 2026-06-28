@@ -63,28 +63,11 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div class="cards-grid">
   <?php foreach ($projects as $project): ?>
-    <article class="card project-card">
-      <a class="project-image-link" href="project.php?id=<?= (int)$project['project_id'] ?>">
-        <?php if (!empty($project['project_image'])): ?>
-          <img class="project-image" src="../<?= e($project['project_image']) ?>" alt="<?= e($project['project_title']) ?>">
-        <?php else: ?>
-          <span class="project-image project-image-placeholder" data-category="<?= e($project['category']) ?>"><strong><?= e(substr($project['project_title'], 0, 1)) ?></strong></span>
-        <?php endif; ?>
-      </a>
-      <div class="card-meta">
-        <span class="status status-<?= e($project['project_status']) ?>"><?= e(status_label($project['project_status'])) ?></span>
-        <span><?= e(date('M j, Y', strtotime($project['created_at']))) ?></span>
-      </div>
-      <h3><?= e($project['project_title']) ?></h3>
-      <p><?= e(excerpt($project['description'], 150)) ?></p>
-      <p class="muted">By @<?= e($project['username']) ?> in <?= e($project['category']) ?></p>
-      <div class="tag-row">
-        <?php foreach (array_filter(array_map('trim', explode(',', $project['required_skills']))) as $item): ?>
-          <span class="tag"><?= e($item) ?></span>
-        <?php endforeach; ?>
-      </div>
-      <a class="btn btn-secondary full" href="project.php?id=<?= (int)$project['project_id'] ?>">View Details</a>
-    </article>
+    <?php render_project_card($project, [
+        'excerpt_length' => 150,
+        'meta' => 'By @' . $project['username'] . ' in ' . $project['category'],
+        'show_button' => true,
+    ]); ?>
   <?php endforeach; ?>
   <?php if (!$projects): ?>
     <div class="empty-state">No projects matched your search.</div>
