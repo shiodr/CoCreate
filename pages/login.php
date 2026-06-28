@@ -38,6 +38,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $pageTitle = 'Login';
 require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../views/login.html';
+?>
+<div class="form-layout compact">
+  <section>
+    <p class="eyebrow">Welcome back</p>
+    <h1>Login to CoCreate</h1>
+    <p class="muted">Continue browsing projects, managing requests, and finding collaborators.</p>
+  </section>
+  <form class="card form-card" method="post" data-validate>
+    <?php if ($error): ?><div class="alert alert-error"><?= e($error) ?></div><?php endif; ?>
+    <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
+    <label>Username or email<input required name="login" value="<?= e($login) ?>"></label>
+    <label>Password<input required type="password" name="password"></label>
+    <button class="btn btn-primary full" type="submit">Login</button>
+    <p class="form-note">No account yet? <a href="register.php">Register here</a>.</p>
+  </form>
+</div>
+
+<?php
 require_once __DIR__ . '/../includes/footer.php';
 ?>

@@ -84,6 +84,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $pageTitle = 'Profile';
 require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../views/profile.html';
+?>
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Profile</p>
+    <h1>Your collaborator profile</h1>
+  </div>
+</section>
+
+<div class="profile-layout">
+  <aside class="card profile-card">
+    <?php if (!empty($user['profile_picture'])): ?>
+      <img class="avatar" src="<?= e(($uploadPrefix ?? '') . $user['profile_picture']) ?>" alt="Profile picture">
+    <?php else: ?>
+      <div class="avatar placeholder"><?= e(substr($user['firstname'], 0, 1) . substr($user['lastname'], 0, 1)) ?></div>
+    <?php endif; ?>
+    <h2><?= e($user['firstname'] . ' ' . $user['lastname']) ?></h2>
+    <p class="muted">@<?= e($user['username']) ?></p>
+    <div class="tag-row">
+      <?php foreach (array_filter(array_map('trim', explode(',', $user['skills'] ?? ''))) as $skill): ?>
+        <span class="tag"><?= e($skill) ?></span>
+      <?php endforeach; ?>
+    </div>
+  </aside>
+
+  <form class="card form-card" method="post" enctype="multipart/form-data" data-validate>
+    <?php foreach ($errors as $error): ?><div class="alert alert-error"><?= e($error) ?></div><?php endforeach; ?>
+    <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
+    <div class="two-col">
+      <label>First name<input required name="firstname" value="<?= e($user['firstname']) ?>"></label>
+      <label>Last name<input required name="lastname" value="<?= e($user['lastname']) ?>"></label>
+    </div>
+    <div class="two-col">
+      <label>Username<input required name="username" value="<?= e($user['username']) ?>"></label>
+      <label>Email<input required type="email" name="email" value="<?= e($user['email']) ?>"></label>
+    </div>
+    <label>Profile picture<input type="file" name="profile_picture" accept="image/*"></label>
+    <label>Skills<textarea name="skills" rows="3"><?= e($user['skills']) ?></textarea></label>
+    <label>Interests<textarea name="interests" rows="3"><?= e($user['interests']) ?></textarea></label>
+    <label>Biography<textarea name="bio" rows="5"><?= e($user['bio']) ?></textarea></label>
+    <button class="btn btn-primary" type="submit">Update Profile</button>
+  </form>
+</div>
+
+<?php
 require_once __DIR__ . '/../includes/footer.php';
 ?>

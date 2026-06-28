@@ -17,7 +17,10 @@ if (!$project) {
     $pageTitle = 'Project Not Found';
     $emptyStateMessage = 'Project not found or you do not have permission to edit it.';
     require_once __DIR__ . '/../includes/header.php';
-    require_once __DIR__ . '/../views/empty_state.html';
+    ?>
+<div class="empty-state"><?= e($emptyStateMessage) ?></div>
+
+<?php
     require_once __DIR__ . '/../includes/footer.php';
     exit;
 }
@@ -56,6 +59,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $pageTitle = 'Edit Project';
 require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../views/edit_project.html';
+?>
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Edit project</p>
+    <h1><?= e($project['project_title']) ?></h1>
+  </div>
+</section>
+
+<form class="card form-card wide" method="post" data-validate>
+  <?php foreach ($errors as $error): ?><div class="alert alert-error"><?= e($error) ?></div><?php endforeach; ?>
+  <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
+  <label>Project title<input required name="project_title" value="<?= e($project['project_title']) ?>"></label>
+  <label>Description<textarea required name="description" rows="7"><?= e($project['description']) ?></textarea></label>
+  <div class="two-col">
+    <label>Required skills<input required name="required_skills" value="<?= e($project['required_skills']) ?>"></label>
+    <label>Category<input required name="category" value="<?= e($project['category']) ?>"></label>
+  </div>
+  <label>Project status
+    <select name="project_status" required>
+      <option value="open" <?= $project['project_status'] === 'open' ? 'selected' : '' ?>>Open</option>
+      <option value="in_progress" <?= $project['project_status'] === 'in_progress' ? 'selected' : '' ?>>In Progress</option>
+      <option value="completed" <?= $project['project_status'] === 'completed' ? 'selected' : '' ?>>Completed</option>
+    </select>
+  </label>
+  <button class="btn btn-primary" type="submit">Update Project</button>
+</form>
+
+<?php
 require_once __DIR__ . '/../includes/footer.php';
 ?>

@@ -25,7 +25,6 @@ CoCreate/
   pages/
   sql/
   uploads/
-  views/
 ```
 
 ## Setup
@@ -56,8 +55,6 @@ const DB_PASS = 'your_database_password';
 ```
 
 6. Visit your site domain. The included `.htaccess` sends the homepage to `pages/index.php` and keeps URLs like `browse.php` working.
-
-Do not open files inside `views/` directly in the browser. Those files are PHP templates and must be loaded through the matching controller in `pages/`.
 
 If uploads fail, make sure the `uploads/` folder exists on InfinityFree and is writable.
 

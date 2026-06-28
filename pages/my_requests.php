@@ -13,6 +13,33 @@ $requests = $stmt->fetchAll();
 
 $pageTitle = 'My Join Requests';
 require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../views/my_requests.html';
+?>
+<section class="page-head">
+  <div>
+    <p class="eyebrow">Applications</p>
+    <h1>My join requests</h1>
+  </div>
+  <a class="btn btn-secondary" href="browse.php">Find Projects</a>
+</section>
+
+<?php if (!$requests): ?>
+  <div class="empty-state">You have not requested to join any projects yet.</div>
+<?php else: ?>
+  <div class="cards-grid">
+    <?php foreach ($requests as $request): ?>
+      <article class="card">
+        <div class="card-meta">
+          <span class="status status-<?= e($request['request_status']) ?>"><?= e(status_label($request['request_status'])) ?></span>
+          <span><?= e(date('M j, Y', strtotime($request['created_at']))) ?></span>
+        </div>
+        <h3><a href="project.php?id=<?= (int)$request['project_id'] ?>"><?= e($request['project_title']) ?></a></h3>
+        <p class="muted">Owner @<?= e($request['owner']) ?> - <?= e($request['category']) ?></p>
+        <p><?= e($request['message'] ?: 'No message provided.') ?></p>
+      </article>
+    <?php endforeach; ?>
+  </div>
+<?php endif; ?>
+
+<?php
 require_once __DIR__ . '/../includes/footer.php';
 ?>

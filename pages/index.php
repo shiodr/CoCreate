@@ -5,6 +5,47 @@ $pagePrefix = '';
 $adminPrefix = '../admin/';
 $pageTitle = 'Build With Better Teammates';
 require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../views/index.html';
+?>
+<section class="hero">
+  <div class="hero-copy">
+    <p class="eyebrow">Teamwork for creative builders</p>
+    <h1>CoCreate</h1>
+    <p class="hero-text">Find teammates for hobby projects, creative ideas, and skill-based activities. Share what you want to build, discover people with matching skills, and manage collaboration requests in one place.</p>
+    <div class="hero-actions">
+      <a class="btn btn-primary" href="<?= is_logged_in() ? 'dashboard.php' : 'register.php' ?>">Get Started</a>
+      <a class="btn btn-secondary" href="login.php">Login</a>
+      <a class="btn btn-ghost" href="register.php">Register</a>
+    </div>
+  </div>
+  <div class="hero-panel">
+    <div class="mini-card strong">Open Projects</div>
+    <div class="mini-card">Design partner needed for a portfolio app</div>
+    <div class="mini-card">Looking for a PHP teammate for a campus tool</div>
+    <div class="mini-card">Music video concept seeking editor and writer</div>
+  </div>
+</section>
+
+<section class="section">
+  <div class="section-head">
+    <p class="eyebrow">How it works</p>
+    <h2>Create, discover, collaborate</h2>
+  </div>
+  <div class="cards-grid">
+    <article class="card">
+      <h3>Post a Project</h3>
+      <p>Describe your idea, category, status, and the skills you need from future teammates.</p>
+    </article>
+    <article class="card">
+      <h3>Find Teammates</h3>
+      <p>Browse projects by keyword, status, or required skill so the right people can connect faster.</p>
+    </article>
+    <article class="card">
+      <h3>Manage Requests</h3>
+      <p>Accept or reject applicants from your project dashboard and keep every request organized.</p>
+    </article>
+  </div>
+</section>
+
+<?php
 require_once __DIR__ . '/../includes/footer.php';
 ?>

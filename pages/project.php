@@ -16,7 +16,10 @@ if (!$project) {
     $pageTitle = 'Project Not Found';
     $emptyStateMessage = 'Project not found.';
     require_once __DIR__ . '/../includes/header.php';
-    require_once __DIR__ . '/../views/empty_state.html';
+    ?>
+<div class="empty-state"><?= e($emptyStateMessage) ?></div>
+
+<?php
     require_once __DIR__ . '/../includes/footer.php';
     exit;
 }
@@ -49,6 +52,49 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
 $pageTitle = $project['project_title'];
 require_once __DIR__ . '/../includes/header.php';
-require_once __DIR__ . '/../views/project.html';
+?>
+<article class="detail-layout">
+  <section class="card detail-card">
+    <div class="card-meta">
+      <span class="status status-<?= e($project['project_status']) ?>"><?= e(status_label($project['project_status'])) ?></span>
+      <span><?= e(date('M j, Y', strtotime($project['created_at']))) ?></span>
+    </div>
+    <h1><?= e($project['project_title']) ?></h1>
+    <p class="muted">By <?= e($project['firstname'] . ' ' . $project['lastname']) ?> (@<?= e($project['username']) ?>)</p>
+    <p><?= nl2br(e($project['description'])) ?></p>
+    <h3>Required skills</h3>
+    <div class="tag-row">
+      <?php foreach (array_filter(array_map('trim', explode(',', $project['required_skills']))) as $skill): ?>
+        <span class="tag"><?= e($skill) ?></span>
+      <?php endforeach; ?>
+    </div>
+    <p><strong>Category:</strong> <?= e($project['category']) ?></p>
+  </section>
+
+  <aside class="card action-card">
+    <?php if (!is_logged_in()): ?>
+      <h2>Interested?</h2>
+      <p class="muted">Login to request to join this project.</p>
+      <a class="btn btn-primary full" href="login.php">Login</a>
+    <?php elseif ($isOwner): ?>
+      <h2>Your project</h2>
+      <p class="muted">You can edit this listing or manage incoming requests.</p>
+      <a class="btn btn-primary full" href="edit_project.php?id=<?= (int)$project['project_id'] ?>">Edit Project</a>
+      <a class="btn btn-secondary full" href="my_projects.php">Manage Requests</a>
+    <?php elseif ($existingRequest): ?>
+      <h2>Request sent</h2>
+      <p>Status: <span class="status status-<?= e($existingRequest['request_status']) ?>"><?= e(status_label($existingRequest['request_status'])) ?></span></p>
+    <?php else: ?>
+      <h2>Request to Join</h2>
+      <form method="post" data-validate>
+        <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
+        <label>Message<textarea name="message" rows="5" placeholder="Tell the project owner why you are interested"></textarea></label>
+        <button class="btn btn-primary full" type="submit">Request to Join</button>
+      </form>
+    <?php endif; ?>
+  </aside>
+</article>
+
+<?php
 require_once __DIR__ . '/../includes/footer.php';
 ?>

@@ -1,5 +1,4 @@
 SET FOREIGN_KEY_CHECKS = 0;
-DROP VIEW IF EXISTS join_request;
 DROP TABLE IF EXISTS join_requests;
 DROP TABLE IF EXISTS project_requirements;
 DROP TABLE IF EXISTS user_skills;
@@ -107,17 +106,6 @@ CREATE TABLE join_requests (
     FOREIGN KEY (skill_id) REFERENCES skills(skill_id)
     ON DELETE SET NULL ON UPDATE CASCADE
 ) ENGINE=InnoDB;
-
-CREATE VIEW join_request AS
-SELECT
-  request_id,
-  project_id,
-  user_id,
-  skill_id,
-  message,
-  request_status AS status,
-  created_at AS requested_at
-FROM join_requests;
 
 INSERT INTO users
   (firstname, lastname, username, email, password_hash, skills, interests, bio, role, status)
