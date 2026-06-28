@@ -22,8 +22,10 @@ CoCreate/
   assets/css/
   assets/js/
   includes/
+  pages/
   sql/
   uploads/
+  views/
 ```
 
 ## Setup
@@ -31,12 +33,33 @@ CoCreate/
 1. Put the project folder inside your local server directory, such as `htdocs` for XAMPP.
 2. Start Apache and MySQL.
 3. Open phpMyAdmin and import `sql/cocreate.sql`.
-4. Check database settings in `includes/db.php`.
+4. Copy `includes/config.example.php` to `includes/config.php`, then check the database settings in `includes/config.php`.
 5. Open the app in the browser:
 
 ```text
 http://localhost/CoCreate/
 ```
+
+## InfinityFree Setup
+
+1. In InfinityFree, create a hosting account and open the File Manager or connect by FTP.
+2. Upload the project contents into your site's `htdocs` folder. Upload the contents of this folder, not an extra parent folder around it.
+3. In the InfinityFree control panel, create a MySQL database.
+4. Open phpMyAdmin for that database and import `sql/cocreate.sql`.
+5. Copy `includes/config.example.php` to `includes/config.php`, then edit `includes/config.php` with the exact database details from InfinityFree:
+
+```php
+const DB_HOST = 'your_mysql_hostname';
+const DB_NAME = 'your_database_name';
+const DB_USER = 'your_database_username';
+const DB_PASS = 'your_database_password';
+```
+
+6. Visit your site domain. The included `.htaccess` sends the homepage to `pages/index.php` and keeps URLs like `browse.php` working.
+
+Do not open files inside `views/` directly in the browser. Those files are PHP templates and must be loaded through the matching controller in `pages/`.
+
+If uploads fail, make sure the `uploads/` folder exists on InfinityFree and is writable.
 
 ## Sample Accounts
 

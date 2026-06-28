@@ -1,9 +1,3 @@
-CREATE DATABASE IF NOT EXISTS cocreate_db
-  CHARACTER SET utf8mb4
-  COLLATE utf8mb4_unicode_ci;
-
-USE cocreate_db;
-
 SET FOREIGN_KEY_CHECKS = 0;
 DROP VIEW IF EXISTS join_request;
 DROP TABLE IF EXISTS join_requests;

@@ -2,9 +2,9 @@ DirectoryIndex pages/index.php
 
 RewriteEngine On
 
+# Keep private project files out of public HTTP access.
+RewriteRule ^(includes|sql|views)/ - [F,L]
+
 # Keep old clean URLs working after moving page controllers into /pages.
 RewriteRule ^$ pages/index.php [L,QSA]
 RewriteRule ^(browse|create_project|dashboard|edit_project|login|logout|my_projects|my_requests|profile|project|register)\.php$ pages/$1.php [L,QSA]
-
-# Views are PHP-rendered templates. Open pages through /pages/*.php instead.
-RewriteRule ^views/ - [F,L]

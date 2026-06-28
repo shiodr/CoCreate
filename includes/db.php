@@ -1,8 +1,13 @@
 <?php
-$host = 'localhost';
-$dbname = 'cocreate_db';
-$username = 'root';
-$password = '';
+$configPath = __DIR__ . '/config.php';
+if (is_file($configPath)) {
+    require_once $configPath;
+}
+
+$host = defined('DB_HOST') ? DB_HOST : 'sql308.infinityfree.com';
+$dbname = defined('DB_NAME') ? DB_NAME : 'if0_42202301_cocreate';
+$username = defined('DB_USER') ? DB_USER : 'if0_42202301';
+$password = defined('DB_PASS') ? DB_PASS : 'b9lqGhYWJJ2TZ62';
 
 try {
     $pdo = new PDO(
@@ -17,5 +22,5 @@ try {
     );
 } catch (PDOException $e) {
     http_response_code(500);
-    die('Database connection failed. Please check includes/db.php.');
+    die('Database connection failed. Please check includes/config.php.');
 }
