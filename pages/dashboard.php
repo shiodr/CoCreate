@@ -41,7 +41,7 @@ require_once __DIR__ . '/../includes/header.php';
           <?php if (!empty($project['project_image'])): ?>
             <img class="project-image" src="../<?= e($project['project_image']) ?>" alt="<?= e($project['project_title']) ?>">
           <?php else: ?>
-            <span class="project-image project-image-placeholder"><?= e(substr($project['project_title'], 0, 1)) ?></span>
+            <span class="project-image project-image-placeholder" data-category="<?= e($project['category']) ?>"><strong><?= e(substr($project['project_title'], 0, 1)) ?></strong></span>
           <?php endif; ?>
         </a>
         <div class="card-meta">
