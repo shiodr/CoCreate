@@ -3,8 +3,8 @@ DirectoryIndex pages/index.php
 RewriteEngine On
 
 # Keep private project files out of public HTTP access.
-RedirectMatch 403 ^/(.*/)?(includes|sql|views)(/.*)?$
-RewriteRule ^(includes|sql|views)/ - [F,L]
+RedirectMatch 403 ^/(.*/)?(includes|sql)(/.*)?$
+RewriteRule ^(includes|sql)/ - [F,L]
 
 # Keep old clean URLs working after moving page controllers into /pages.
 RewriteRule ^$ pages/index.php [L,QSA]

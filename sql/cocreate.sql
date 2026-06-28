@@ -49,6 +49,7 @@ CREATE TABLE projects (
   required_skills TEXT NOT NULL,
   category VARCHAR(120) NOT NULL,
   project_status ENUM('open', 'in_progress', 'completed') NOT NULL DEFAULT 'open',
+  project_image VARCHAR(255) DEFAULT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_projects_user
     FOREIGN KEY (user_id) REFERENCES users(user_id)

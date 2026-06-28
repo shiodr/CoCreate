@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/session.php';
 require_admin();
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/uploads.php';
 
 $assetPrefix = '../';
 $pagePrefix = '../pages/';
@@ -15,8 +16,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($userId === current_user_id()) {
         flash('error', 'You cannot modify your own account here.');
     } elseif ($action === 'delete') {
+        $imageStmt = $pdo->prepare('SELECT project_image FROM projects WHERE user_id = ? AND project_image IS NOT NULL');
+        $imageStmt->execute([$userId]);
+        $projectImages = $imageStmt->fetchAll(PDO::FETCH_COLUMN);
         $stmt = $pdo->prepare('DELETE FROM users WHERE user_id = ?');
         $stmt->execute([$userId]);
+        if ($stmt->rowCount() > 0) {
+            foreach ($projectImages as $projectImage) {
+                delete_uploaded_file($projectImage, __DIR__ . '/..');
+            }
+        }
         flash('success', 'User deleted.');
     } elseif ($action === 'disable') {
         $stmt = $pdo->prepare("UPDATE users SET status = 'disabled' WHERE user_id = ?");

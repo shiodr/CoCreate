@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/session.php';
 require_login();
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/uploads.php';
 
 $assetPrefix = '../';
 $pagePrefix = '';
@@ -28,6 +29,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($project['category'] === '') $errors[] = 'Project category is required.';
     if (!valid_project_status($project['project_status'])) $errors[] = 'Invalid project status.';
 
+    if (!$errors && isset($_FILES['project_image'])) {
+        $imageError = validate_project_image($_FILES['project_image']);
+        if ($imageError) $errors[] = $imageError;
+    }
+
     if (!$errors) {
         $stmt = $pdo->prepare('INSERT INTO projects (user_id, project_title, description, required_skills, category, project_status) VALUES (?, ?, ?, ?, ?, ?)');
         $stmt->execute([
@@ -38,6 +44,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $project['category'],
             $project['project_status'],
         ]);
+
+        $projectId = (int)$pdo->lastInsertId();
+        if (isset($_FILES['project_image'])) {
+            [$projectImage, $imageError] = save_project_image($_FILES['project_image'], $projectId, __DIR__ . '/..');
+            if ($imageError) {
+                flash('error', $imageError);
+            } elseif ($projectImage) {
+                $updateImage = $pdo->prepare('UPDATE projects SET project_image = ? WHERE project_id = ? AND user_id = ?');
+                $updateImage->execute([$projectImage, $projectId, current_user_id()]);
+            }
+        }
+
         flash('success', 'Project created successfully.');
         header('Location: my_projects.php');
         exit;
@@ -54,7 +72,7 @@ require_once __DIR__ . '/../includes/header.php';
   </div>
 </section>
 
-<form class="card form-card wide" method="post" data-validate>
+<form class="card form-card wide" method="post" enctype="multipart/form-data" data-validate>
   <?php foreach ($errors as $error): ?><div class="alert alert-error"><?= e($error) ?></div><?php endforeach; ?>
   <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
   <label>Project title<input required name="project_title" value="<?= e($project['project_title']) ?>"></label>
@@ -69,6 +87,9 @@ require_once __DIR__ . '/../includes/header.php';
       <option value="in_progress" <?= $project['project_status'] === 'in_progress' ? 'selected' : '' ?>>In Progress</option>
       <option value="completed" <?= $project['project_status'] === 'completed' ? 'selected' : '' ?>>Completed</option>
     </select>
+  </label>
+  <label>Project image <span class="field-hint">Optional. JPG, PNG, GIF, or WebP up to 3 MB.</span>
+    <input type="file" name="project_image" accept="image/*">
   </label>
   <button class="btn btn-primary" type="submit">Save Project</button>
 </form>

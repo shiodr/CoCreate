@@ -8,6 +8,7 @@ CoCreate is a responsive PHP and MySQL collaboration platform for finding teamma
 - Password storage with `password_hash()`
 - Browse, search, and filter project listings
 - Create, edit, and delete owned projects
+- Add optional images to project listings
 - Submit join requests with duplicate prevention
 - Accept or reject applicants for owned projects
 - Edit profile, skills, interests, biography, and profile picture
@@ -55,6 +56,8 @@ const DB_PASS = 'your_database_password';
 ```
 
 6. Visit your site domain. The included `.htaccess` sends the homepage to `pages/index.php` and keeps URLs like `browse.php` working.
+
+If you already imported an older database before project images were added, import `sql/add_project_images.sql` once in phpMyAdmin.
 
 If uploads fail, make sure the `uploads/` folder exists on InfinityFree and is writable.
 

@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/session.php';
 require_login();
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/uploads.php';
 
 $assetPrefix = '../';
 $pagePrefix = '';
@@ -33,21 +34,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $project['required_skills'] = trim($_POST['required_skills'] ?? '');
     $project['category'] = trim($_POST['category'] ?? '');
     $project['project_status'] = trim($_POST['project_status'] ?? 'open');
+    $removeImage = ($_POST['remove_project_image'] ?? '') === '1';
+    $hasNewImage = isset($_FILES['project_image']) && $_FILES['project_image']['error'] !== UPLOAD_ERR_NO_FILE;
 
     if ($project['project_title'] === '') $errors[] = 'Project title is required.';
     if ($project['description'] === '') $errors[] = 'Description is required.';
     if ($project['required_skills'] === '') $errors[] = 'Required skills are required.';
     if ($project['category'] === '') $errors[] = 'Project category is required.';
     if (!valid_project_status($project['project_status'])) $errors[] = 'Invalid project status.';
+    if ($hasNewImage) {
+        $imageError = validate_project_image($_FILES['project_image']);
+        if ($imageError) $errors[] = $imageError;
+    }
 
     if (!$errors) {
-        $update = $pdo->prepare('UPDATE projects SET project_title = ?, description = ?, required_skills = ?, category = ?, project_status = ? WHERE project_id = ? AND user_id = ?');
+        $projectImage = $project['project_image'] ?? null;
+
+        if ($hasNewImage) {
+            [$newImage, $imageError] = save_project_image($_FILES['project_image'], $id, __DIR__ . '/..');
+            if ($imageError) {
+                $errors[] = $imageError;
+            } else {
+                delete_uploaded_file($projectImage, __DIR__ . '/..');
+                $projectImage = $newImage;
+            }
+        } elseif ($removeImage) {
+            delete_uploaded_file($projectImage, __DIR__ . '/..');
+            $projectImage = null;
+        }
+    }
+
+    if (!$errors) {
+        $update = $pdo->prepare('UPDATE projects SET project_title = ?, description = ?, required_skills = ?, category = ?, project_status = ?, project_image = ? WHERE project_id = ? AND user_id = ?');
         $update->execute([
             $project['project_title'],
             $project['description'],
             $project['required_skills'],
             $project['category'],
             $project['project_status'],
+            $projectImage,
             $id,
             current_user_id(),
         ]);
@@ -67,7 +92,7 @@ require_once __DIR__ . '/../includes/header.php';
   </div>
 </section>
 
-<form class="card form-card wide" method="post" data-validate>
+<form class="card form-card wide" method="post" enctype="multipart/form-data" data-validate>
   <?php foreach ($errors as $error): ?><div class="alert alert-error"><?= e($error) ?></div><?php endforeach; ?>
   <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
   <label>Project title<input required name="project_title" value="<?= e($project['project_title']) ?>"></label>
@@ -82,6 +107,15 @@ require_once __DIR__ . '/../includes/header.php';
       <option value="in_progress" <?= $project['project_status'] === 'in_progress' ? 'selected' : '' ?>>In Progress</option>
       <option value="completed" <?= $project['project_status'] === 'completed' ? 'selected' : '' ?>>Completed</option>
     </select>
+  </label>
+  <?php if (!empty($project['project_image'])): ?>
+    <div class="image-preview">
+      <img src="../<?= e($project['project_image']) ?>" alt="Current project image">
+      <label class="check-row"><input type="checkbox" name="remove_project_image" value="1"> Remove current image</label>
+    </div>
+  <?php endif; ?>
+  <label>Replace project image <span class="field-hint">Optional. JPG, PNG, GIF, or WebP up to 3 MB.</span>
+    <input type="file" name="project_image" accept="image/*">
   </label>
   <button class="btn btn-primary" type="submit">Update Project</button>
 </form>

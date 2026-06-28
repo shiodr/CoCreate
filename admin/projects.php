@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/session.php';
 require_admin();
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/uploads.php';
 
 $assetPrefix = '../';
 $pagePrefix = '../pages/';
@@ -11,8 +12,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     check_csrf();
     if (($_POST['action'] ?? '') === 'delete') {
         $projectId = (int)($_POST['project_id'] ?? 0);
+        $imageStmt = $pdo->prepare('SELECT project_image FROM projects WHERE project_id = ?');
+        $imageStmt->execute([$projectId]);
+        $projectImage = $imageStmt->fetchColumn();
         $stmt = $pdo->prepare('DELETE FROM projects WHERE project_id = ?');
         $stmt->execute([$projectId]);
+        if ($stmt->rowCount() > 0) {
+            delete_uploaded_file($projectImage ?: null, __DIR__ . '/..');
+        }
         flash('success', 'Project removed.');
     }
     header('Location: projects.php');
@@ -33,11 +40,20 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div class="table-wrap">
   <table>
-    <thead><tr><th>Title</th><th>Owner</th><th>Category</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
+    <thead><tr><th>Project</th><th>Owner</th><th>Category</th><th>Status</th><th>Created</th><th>Actions</th></tr></thead>
     <tbody>
     <?php foreach ($projects as $project): ?>
       <tr>
-        <td><a href="<?= e($pagePrefix ?? '../pages/') ?>project.php?id=<?= (int)$project['project_id'] ?>"><?= e($project['project_title']) ?></a></td>
+        <td>
+          <div class="table-project">
+            <?php if (!empty($project['project_image'])): ?>
+              <img src="../<?= e($project['project_image']) ?>" alt="<?= e($project['project_title']) ?>">
+            <?php else: ?>
+              <span><?= e(substr($project['project_title'], 0, 1)) ?></span>
+            <?php endif; ?>
+            <a href="<?= e($pagePrefix ?? '../pages/') ?>project.php?id=<?= (int)$project['project_id'] ?>"><?= e($project['project_title']) ?></a>
+          </div>
+        </td>
         <td>@<?= e($project['username']) ?></td>
         <td><?= e($project['category']) ?></td>
         <td><span class="status status-<?= e($project['project_status']) ?>"><?= e(status_label($project['project_status'])) ?></span></td>

@@ -55,6 +55,11 @@ require_once __DIR__ . '/../includes/header.php';
 ?>
 <article class="detail-layout">
   <section class="card detail-card">
+    <?php if (!empty($project['project_image'])): ?>
+      <img class="detail-image" src="../<?= e($project['project_image']) ?>" alt="<?= e($project['project_title']) ?>">
+    <?php else: ?>
+      <div class="detail-image detail-image-placeholder"><?= e(substr($project['project_title'], 0, 1)) ?></div>
+    <?php endif; ?>
     <div class="card-meta">
       <span class="status status-<?= e($project['project_status']) ?>"><?= e(status_label($project['project_status'])) ?></span>
       <span><?= e(date('M j, Y', strtotime($project['created_at']))) ?></span>

@@ -2,6 +2,7 @@
 require_once __DIR__ . '/../includes/session.php';
 require_login();
 require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . '/../includes/uploads.php';
 
 $assetPrefix = '../';
 $pagePrefix = '';
@@ -15,8 +16,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
     if ($action === 'delete_project') {
         $projectId = (int)($_POST['project_id'] ?? 0);
+        $imageStmt = $pdo->prepare('SELECT project_image FROM projects WHERE project_id = ? AND user_id = ?');
+        $imageStmt->execute([$projectId, $uid]);
+        $projectImage = $imageStmt->fetchColumn();
         $stmt = $pdo->prepare('DELETE FROM projects WHERE project_id = ? AND user_id = ?');
         $stmt->execute([$projectId, $uid]);
+        if ($stmt->rowCount() > 0) {
+            delete_uploaded_file($projectImage ?: null, __DIR__ . '/..');
+        }
         flash('success', 'Project deleted.');
     }
 
@@ -58,6 +65,13 @@ require_once __DIR__ . '/../includes/header.php';
   <div class="cards-grid">
     <?php foreach ($projects as $project): ?>
       <article class="card project-card">
+        <a class="project-image-link" href="project.php?id=<?= (int)$project['project_id'] ?>">
+          <?php if (!empty($project['project_image'])): ?>
+            <img class="project-image" src="../<?= e($project['project_image']) ?>" alt="<?= e($project['project_title']) ?>">
+          <?php else: ?>
+            <span class="project-image project-image-placeholder"><?= e(substr($project['project_title'], 0, 1)) ?></span>
+          <?php endif; ?>
+        </a>
         <div class="card-meta">
           <span class="status status-<?= e($project['project_status']) ?>"><?= e(status_label($project['project_status'])) ?></span>
           <span><?= e(date('M j, Y', strtotime($project['created_at']))) ?></span>

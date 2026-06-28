@@ -64,6 +64,13 @@ require_once __DIR__ . '/../includes/header.php';
 <div class="cards-grid">
   <?php foreach ($projects as $project): ?>
     <article class="card project-card">
+      <a class="project-image-link" href="project.php?id=<?= (int)$project['project_id'] ?>">
+        <?php if (!empty($project['project_image'])): ?>
+          <img class="project-image" src="../<?= e($project['project_image']) ?>" alt="<?= e($project['project_title']) ?>">
+        <?php else: ?>
+          <span class="project-image project-image-placeholder"><?= e(substr($project['project_title'], 0, 1)) ?></span>
+        <?php endif; ?>
+      </a>
       <div class="card-meta">
         <span class="status status-<?= e($project['project_status']) ?>"><?= e(status_label($project['project_status'])) ?></span>
         <span><?= e(date('M j, Y', strtotime($project['created_at']))) ?></span>

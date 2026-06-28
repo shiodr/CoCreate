@@ -1,4 +1,9 @@
 uploads/*
 !uploads/.gitkeep
+!uploads/.htaccess
+!uploads/projects/
+uploads/projects/*
+!uploads/projects/.gitkeep
+!uploads/projects/.htaccess
 includes/config.php
 .DS_Store
