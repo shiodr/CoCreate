@@ -20,6 +20,14 @@ $old = [
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     check_csrf();
+    $skillOptions = cocreate_merge_choice_options(
+        $skillOptions,
+        $_POST["skills"] ?? [],
+    );
+    $interestOptions = cocreate_merge_choice_options(
+        $interestOptions,
+        $_POST["interests"] ?? [],
+    );
     $old = array_merge(
         $old,
         cocreate_trim_fields($_POST, [
@@ -80,6 +88,14 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 $pageTitle = "Register";
 $selectedSkills = cocreate_selected_options($old["skills"]);
 $selectedInterests = cocreate_selected_options($old["interests"]);
+$skillOptions = cocreate_merge_choice_options(
+    $skillOptions,
+    array_keys($selectedSkills),
+);
+$interestOptions = cocreate_merge_choice_options(
+    $interestOptions,
+    array_keys($selectedInterests),
+);
 require_once __DIR__ . "/../includes/header.php";
 ?>
 <div class="form-layout">
@@ -116,12 +132,16 @@ require_once __DIR__ . "/../includes/header.php";
         "Skills",
         $skillOptions,
         $selectedSkills,
+        "Choose all that apply.",
+        "Add custom skill",
     ); ?>
     <?php render_choice_fieldset(
         "interests",
         "Interests",
         $interestOptions,
         $selectedInterests,
+        "Choose all that apply.",
+        "Add custom interest",
     ); ?>
     <button class="btn btn-primary full" type="submit">Create Account</button>
     <p class="form-note">Already have an account? <a href="login.php">Login here</a>.</p>

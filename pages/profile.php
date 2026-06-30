@@ -19,9 +19,19 @@ if (!$user) {
 }
 
 $errors = [];
+$skillOptions = cocreate_skill_options($pdo);
+$interestOptions = cocreate_interest_options();
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     check_csrf();
+    $skillOptions = cocreate_merge_choice_options(
+        $skillOptions,
+        $_POST["skills"] ?? [],
+    );
+    $interestOptions = cocreate_merge_choice_options(
+        $interestOptions,
+        $_POST["interests"] ?? [],
+    );
     $user = array_merge(
         $user,
         cocreate_trim_fields($_POST, [
@@ -29,10 +39,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             "lastname",
             "username",
             "email",
-            "skills",
-            "interests",
             "bio",
         ]),
+    );
+    $user["skills"] = cocreate_join_selected_options(
+        $_POST["skills"] ?? [],
+        $skillOptions,
+    );
+    $user["interests"] = cocreate_join_selected_options(
+        $_POST["interests"] ?? [],
+        $interestOptions,
     );
 
     $errors = array_merge($errors, cocreate_validate_identity_fields($user));
@@ -103,6 +119,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
 }
 
 $pageTitle = "Profile";
+$selectedSkills = cocreate_selected_options($user["skills"] ?? "");
+$selectedInterests = cocreate_selected_options($user["interests"] ?? "");
+$skillOptions = cocreate_merge_choice_options(
+    $skillOptions,
+    array_keys($selectedSkills),
+);
+$interestOptions = cocreate_merge_choice_options(
+    $interestOptions,
+    array_keys($selectedInterests),
+);
 require_once __DIR__ . "/../includes/header.php";
 ?>
 <section class="page-head">
@@ -150,12 +176,22 @@ require_once __DIR__ . "/../includes/header.php";
       ) ?>"></label>
     </div>
     <label>Profile picture<input type="file" name="profile_picture" accept="image/*"></label>
-    <label>Skills<textarea name="skills" rows="3"><?= e(
-        $user["skills"],
-    ) ?></textarea></label>
-    <label>Interests<textarea name="interests" rows="3"><?= e(
-        $user["interests"],
-    ) ?></textarea></label>
+    <?php render_choice_fieldset(
+        "skills",
+        "Skills",
+        $skillOptions,
+        $selectedSkills,
+        "Choose all that apply.",
+        "Add custom skill",
+    ); ?>
+    <?php render_choice_fieldset(
+        "interests",
+        "Interests",
+        $interestOptions,
+        $selectedInterests,
+        "Choose all that apply.",
+        "Add custom interest",
+    ); ?>
     <label>Biography<textarea name="bio" rows="5"><?= e(
         $user["bio"],
     ) ?></textarea></label>

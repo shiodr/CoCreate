@@ -170,6 +170,32 @@ function cocreate_interest_options(): array
     ];
 }
 
+function cocreate_merge_choice_options(array $options, array $extra = []): array
+{
+    $merged = [];
+    $seen = [];
+
+    foreach (array_merge($options, $extra) as $option) {
+        $option = trim((string) $option);
+        if ($option === "") {
+            continue;
+        }
+
+        $key = function_exists("mb_strtolower")
+            ? mb_strtolower($option, "UTF-8")
+            : strtolower($option);
+
+        if (isset($seen[$key])) {
+            continue;
+        }
+
+        $seen[$key] = true;
+        $merged[] = $option;
+    }
+
+    return $merged;
+}
+
 function cocreate_join_selected_options($posted, array $allowed): string
 {
     if (!is_array($posted)) {
@@ -191,11 +217,14 @@ function render_choice_fieldset(
     array $options,
     array $selected,
     string $hint = "Choose all that apply.",
+    string $customPlaceholder = "Add custom option",
 ): void {
-    echo '<fieldset class="choice-group">';
+    echo '<fieldset class="choice-group" data-choice-fieldset data-choice-name="' .
+        e($name) .
+        '">';
     echo "<legend>" . e($legend) . "</legend>";
     echo '<p class="field-hint">' . e($hint) . "</p>";
-    echo '<div class="choice-grid">';
+    echo '<div class="choice-grid" data-choice-grid>';
     foreach ($options as $option) {
         echo '<label class="choice-pill">';
         echo '<input type="checkbox" name="' .
@@ -208,6 +237,12 @@ function render_choice_fieldset(
         echo "<span>" . e($option) . "</span>";
         echo "</label>";
     }
+    echo "</div>";
+    echo '<div class="choice-adder">';
+    echo '<input type="text" data-choice-input placeholder="' .
+        e($customPlaceholder) .
+        '">';
+    echo '<button class="btn btn-ghost choice-add-button" type="button" data-choice-add>Add</button>';
     echo "</div>";
     echo "</fieldset>";
 }
