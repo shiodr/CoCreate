@@ -1,88 +1,109 @@
 <?php
-require_once __DIR__ . '/../includes/session.php';
+require_once __DIR__ . "/../includes/session.php";
 require_login();
-require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . "/../includes/db.php";
 
-$assetPrefix = '../';
-$pagePrefix = '';
-$adminPrefix = '../admin/';
+$assetPrefix = "../";
+$pagePrefix = "";
+$adminPrefix = "../admin/";
 
 $uid = current_user_id();
-$stmt = $pdo->prepare('SELECT * FROM users WHERE user_id = ?');
+$stmt = $pdo->prepare("SELECT * FROM users WHERE user_id = ?");
 $stmt->execute([$uid]);
 $user = $stmt->fetch();
 
 if (!$user) {
     session_destroy();
-    header('Location: login.php');
-    exit;
+    header("Location: login.php");
+    exit();
 }
 
 $errors = [];
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
     check_csrf();
-    $user['firstname'] = trim($_POST['firstname'] ?? '');
-    $user['lastname'] = trim($_POST['lastname'] ?? '');
-    $user['username'] = trim($_POST['username'] ?? '');
-    $user['email'] = trim($_POST['email'] ?? '');
-    $user['skills'] = trim($_POST['skills'] ?? '');
-    $user['interests'] = trim($_POST['interests'] ?? '');
-    $user['bio'] = trim($_POST['bio'] ?? '');
+    $user = array_merge(
+        $user,
+        cocreate_trim_fields($_POST, [
+            "firstname",
+            "lastname",
+            "username",
+            "email",
+            "skills",
+            "interests",
+            "bio",
+        ]),
+    );
 
-    if ($user['firstname'] === '') $errors[] = 'First name is required.';
-    if ($user['lastname'] === '') $errors[] = 'Last name is required.';
-    if ($user['username'] === '') $errors[] = 'Username is required.';
-    if (!filter_var($user['email'], FILTER_VALIDATE_EMAIL)) $errors[] = 'A valid email is required.';
+    $errors = array_merge($errors, cocreate_validate_identity_fields($user));
 
     if (!$errors) {
-        $check = $pdo->prepare('SELECT COUNT(*) FROM users WHERE (username = ? OR email = ?) AND user_id <> ?');
-        $check->execute([$user['username'], $user['email'], $uid]);
-        if ((int)$check->fetchColumn() > 0) {
-            $errors[] = 'Username or email is already used by another account.';
+        $check = $pdo->prepare(
+            "SELECT COUNT(*) FROM users WHERE (username = ? OR email = ?) AND user_id <> ?",
+        );
+        $check->execute([$user["username"], $user["email"], $uid]);
+        if ((int) $check->fetchColumn() > 0) {
+            $errors[] = "Username or email is already used by another account.";
         }
     }
 
-    $profilePicture = $user['profile_picture'];
-    if (!$errors && isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] !== UPLOAD_ERR_NO_FILE) {
-        if ($_FILES['profile_picture']['error'] !== UPLOAD_ERR_OK) {
-            $errors[] = 'Profile picture upload failed.';
+    $profilePicture = $user["profile_picture"];
+    if (
+        !$errors &&
+        isset($_FILES["profile_picture"]) &&
+        $_FILES["profile_picture"]["error"] !== UPLOAD_ERR_NO_FILE
+    ) {
+        if ($_FILES["profile_picture"]["error"] !== UPLOAD_ERR_OK) {
+            $errors[] = "Profile picture upload failed.";
         } else {
-            $allowed = ['jpg', 'jpeg', 'png', 'gif', 'webp'];
-            $extension = strtolower(pathinfo($_FILES['profile_picture']['name'], PATHINFO_EXTENSION));
+            $allowed = ["jpg", "jpeg", "png", "gif", "webp"];
+            $extension = strtolower(
+                pathinfo(
+                    $_FILES["profile_picture"]["name"],
+                    PATHINFO_EXTENSION,
+                ),
+            );
             if (!in_array($extension, $allowed, true)) {
-                $errors[] = 'Profile picture must be an image file.';
+                $errors[] = "Profile picture must be an image file.";
             } else {
-                $profilePicture = 'uploads/profile_' . $uid . '_' . time() . '.' . $extension;
-                if (!move_uploaded_file($_FILES['profile_picture']['tmp_name'], __DIR__ . '/../' . $profilePicture)) {
-                    $errors[] = 'Could not save the profile picture.';
+                $profilePicture =
+                    "uploads/profile_" . $uid . "_" . time() . "." . $extension;
+                if (
+                    !move_uploaded_file(
+                        $_FILES["profile_picture"]["tmp_name"],
+                        __DIR__ . "/../" . $profilePicture,
+                    )
+                ) {
+                    $errors[] = "Could not save the profile picture.";
                 }
             }
         }
     }
 
     if (!$errors) {
-        $update = $pdo->prepare('UPDATE users SET firstname = ?, lastname = ?, username = ?, email = ?, profile_picture = ?, skills = ?, interests = ?, bio = ? WHERE user_id = ?');
+        $update = $pdo->prepare(
+            "UPDATE users SET firstname = ?, lastname = ?, username = ?, email = ?, profile_picture = ?, skills = ?, interests = ?, bio = ? WHERE user_id = ?",
+        );
         $update->execute([
-            $user['firstname'],
-            $user['lastname'],
-            $user['username'],
-            $user['email'],
+            $user["firstname"],
+            $user["lastname"],
+            $user["username"],
+            $user["email"],
             $profilePicture,
-            $user['skills'],
-            $user['interests'],
-            $user['bio'],
+            $user["skills"],
+            $user["interests"],
+            $user["bio"],
             $uid,
         ]);
-        $_SESSION['firstname'] = $user['firstname'];
-        flash('success', 'Profile updated successfully.');
-        header('Location: profile.php');
-        exit;
+        $_SESSION["firstname"] = $user["firstname"];
+        flash("success", "Profile updated successfully.");
+        header("Location: profile.php");
+        exit();
     }
 }
 
-$pageTitle = 'Profile';
-require_once __DIR__ . '/../includes/header.php';
+$pageTitle = "Profile";
+require_once __DIR__ . "/../includes/header.php";
 ?>
 <section class="page-head">
   <div>
@@ -93,35 +114,54 @@ require_once __DIR__ . '/../includes/header.php';
 
 <div class="profile-layout">
   <aside class="card profile-card">
-    <?php if (!empty($user['profile_picture'])): ?>
-      <img class="avatar" src="<?= e(($publicPrefix ?? '../') . $user['profile_picture']) ?>" alt="Profile picture">
+    <?php if (!empty($user["profile_picture"])): ?>
+      <img class="avatar" src="<?= e(
+          $publicPrefix . $user["profile_picture"],
+      ) ?>" alt="Profile picture">
     <?php else: ?>
-      <div class="avatar placeholder"><?= e(substr($user['firstname'], 0, 1) . substr($user['lastname'], 0, 1)) ?></div>
+      <div class="avatar placeholder"><?= e(
+          substr($user["firstname"], 0, 1) . substr($user["lastname"], 0, 1),
+      ) ?></div>
     <?php endif; ?>
-    <h2><?= e($user['firstname'] . ' ' . $user['lastname']) ?></h2>
-    <p class="muted">@<?= e($user['username']) ?></p>
-    <?php render_skill_tags($user['skills'] ?? ''); ?>
+    <h2><?= e($user["firstname"] . " " . $user["lastname"]) ?></h2>
+    <p class="muted">@<?= e($user["username"]) ?></p>
+    <?php render_skill_tags($user["skills"] ?? ""); ?>
   </aside>
 
   <form class="card form-card" method="post" enctype="multipart/form-data" data-validate>
-    <?php foreach ($errors as $error): ?><div class="alert alert-error"><?= e($error) ?></div><?php endforeach; ?>
+    <?php foreach ($errors as $error): ?><div class="alert alert-error"><?= e(
+    $error,
+) ?></div><?php endforeach; ?>
     <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
     <div class="two-col">
-      <label>First name<input required name="firstname" value="<?= e($user['firstname']) ?>"></label>
-      <label>Last name<input required name="lastname" value="<?= e($user['lastname']) ?>"></label>
+      <label>First name<input required name="firstname" value="<?= e(
+          $user["firstname"],
+      ) ?>"></label>
+      <label>Last name<input required name="lastname" value="<?= e(
+          $user["lastname"],
+      ) ?>"></label>
     </div>
     <div class="two-col">
-      <label>Username<input required name="username" value="<?= e($user['username']) ?>"></label>
-      <label>Email<input required type="email" name="email" value="<?= e($user['email']) ?>"></label>
+      <label>Username<input required name="username" value="<?= e(
+          $user["username"],
+      ) ?>"></label>
+      <label>Email<input required type="email" name="email" value="<?= e(
+          $user["email"],
+      ) ?>"></label>
     </div>
     <label>Profile picture<input type="file" name="profile_picture" accept="image/*"></label>
-    <label>Skills<textarea name="skills" rows="3"><?= e($user['skills']) ?></textarea></label>
-    <label>Interests<textarea name="interests" rows="3"><?= e($user['interests']) ?></textarea></label>
-    <label>Biography<textarea name="bio" rows="5"><?= e($user['bio']) ?></textarea></label>
+    <label>Skills<textarea name="skills" rows="3"><?= e(
+        $user["skills"],
+    ) ?></textarea></label>
+    <label>Interests<textarea name="interests" rows="3"><?= e(
+        $user["interests"],
+    ) ?></textarea></label>
+    <label>Biography<textarea name="bio" rows="5"><?= e(
+        $user["bio"],
+    ) ?></textarea></label>
     <button class="btn btn-primary" type="submit">Update Profile</button>
   </form>
 </div>
 
-<?php
-require_once __DIR__ . '/../includes/footer.php';
+<?php require_once __DIR__ . "/../includes/footer.php";
 ?>

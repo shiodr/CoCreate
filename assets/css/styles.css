@@ -802,6 +802,9 @@ img {
   border: 1px solid transparent;
   border-radius: var(--radius);
   cursor: pointer;
+  appearance: none;
+  outline: none;
+  overflow: hidden;
   font: inherit;
   font-weight: 900;
   line-height: 1.1;
@@ -844,6 +847,10 @@ img {
 .btn-danger {
   color: #fff;
   background: var(--danger);
+}
+
+.btn:focus-visible {
+  box-shadow: 0 0 0 4px rgba(22, 93, 255, 0.18), 0 14px 28px rgba(22, 93, 255, 0.24);
 }
 
 .full {
@@ -978,6 +985,72 @@ select:focus {
   gap: 8px;
   color: var(--muted);
   font-weight: 800;
+}
+
+.choice-group {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.choice-group legend {
+  color: var(--ink-soft);
+  font-weight: 850;
+}
+
+.choice-group .field-hint {
+  margin: -4px 0 0;
+}
+
+.choice-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.choice-pill {
+  display: inline-flex;
+  cursor: pointer;
+}
+
+.choice-pill input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.choice-pill span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 1px solid #c8d4e7;
+  border-radius: 999px;
+  color: var(--ink-soft);
+  background: #fff;
+  font-size: 0.9rem;
+  font-weight: 850;
+  transition: background 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease, color 0.16s ease, transform 0.16s ease;
+}
+
+.choice-pill:hover span {
+  border-color: rgba(22, 93, 255, 0.34);
+  transform: translateY(-1px);
+}
+
+.choice-pill input:focus-visible + span {
+  outline: 3px solid rgba(22, 93, 255, 0.16);
+  border-color: var(--blue);
+}
+
+.choice-pill input:checked + span {
+  color: #075f59;
+  border-color: rgba(0, 184, 169, 0.46);
+  background: linear-gradient(135deg, #dcfffb, #eaf1ff);
+  box-shadow: 0 10px 22px rgba(0, 184, 169, 0.14);
 }
 
 .image-preview {
@@ -1312,7 +1385,8 @@ tr:last-child td {
 }
 
 [data-theme="dark"] .hero-text,
-[data-theme="dark"] label {
+[data-theme="dark"] label,
+[data-theme="dark"] .choice-group legend {
   color: var(--ink-soft);
 }
 
@@ -1387,9 +1461,20 @@ tr:last-child td {
   background: rgba(9, 15, 29, 0.92);
 }
 
-[data-theme="dark"] .tag {
+[data-theme="dark"] .tag,
+[data-theme="dark"] .choice-pill input:checked + span {
   color: #bffbf6;
   background: linear-gradient(135deg, rgba(53, 224, 209, 0.16), rgba(77, 130, 255, 0.18));
+}
+
+[data-theme="dark"] .choice-pill span {
+  color: var(--ink-soft);
+  border-color: var(--line);
+  background: #0d1627;
+}
+
+[data-theme="dark"] .choice-pill input:checked + span {
+  border-color: rgba(53, 224, 209, 0.4);
 }
 
 [data-theme="dark"] .status-open,

@@ -110,7 +110,7 @@ require_once __DIR__ . '/../includes/header.php';
   </label>
   <?php if (!empty($project['project_image'])): ?>
     <div class="image-preview">
-      <img src="<?= e(($publicPrefix ?? '../') . $project['project_image']) ?>" alt="Current project image">
+      <img src="<?= e($publicPrefix . $project['project_image']) ?>" alt="Current project image">
       <label class="check-row"><input type="checkbox" name="remove_project_image" value="1"> Remove current image</label>
     </div>
   <?php endif; ?>

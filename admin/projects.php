@@ -47,7 +47,7 @@ require_once __DIR__ . '/../includes/header.php';
         <td>
           <div class="table-project">
             <?php render_project_media($project, 'table-thumb'); ?>
-            <a href="<?= e($pagePrefix ?? '../pages/') ?>project.php?id=<?= (int)$project['project_id'] ?>"><?= e($project['project_title']) ?></a>
+            <a href="<?= e($pagePrefix) ?>project.php?id=<?= (int)$project['project_id'] ?>"><?= e($project['project_title']) ?></a>
           </div>
         </td>
         <td>@<?= e($project['username']) ?></td>
