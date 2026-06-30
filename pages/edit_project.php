@@ -7,6 +7,8 @@ require_once __DIR__ . '/../includes/uploads.php';
 $assetPrefix = '../';
 $pagePrefix = '';
 $adminPrefix = '../admin/';
+$skillOptions = cocreate_skill_options($pdo);
+$categoryOptions = cocreate_project_category_options();
 
 $id = (int)($_GET['id'] ?? 0);
 $stmt = $pdo->prepare('SELECT * FROM projects WHERE project_id = ? AND user_id = ?');
@@ -27,11 +29,13 @@ if (!$project) {
 }
 
 $errors = [];
+$categoryOptions = cocreate_merge_choice_options($categoryOptions, [$project['category'] ?? '']);
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     check_csrf();
+    $skillOptions = cocreate_merge_choice_options($skillOptions, $_POST['required_skills'] ?? []);
     $project['project_title'] = trim($_POST['project_title'] ?? '');
     $project['description'] = trim($_POST['description'] ?? '');
-    $project['required_skills'] = trim($_POST['required_skills'] ?? '');
+    $project['required_skills'] = cocreate_join_selected_options($_POST['required_skills'] ?? [], $skillOptions);
     $project['category'] = trim($_POST['category'] ?? '');
     $project['project_status'] = trim($_POST['project_status'] ?? 'open');
     $removeImage = ($_POST['remove_project_image'] ?? '') === '1';
@@ -41,6 +45,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($project['description'] === '') $errors[] = 'Description is required.';
     if ($project['required_skills'] === '') $errors[] = 'Required skills are required.';
     if ($project['category'] === '') $errors[] = 'Project category is required.';
+    else {
+        $matchedCategory = cocreate_canonical_option($project['category'], $categoryOptions);
+        if ($matchedCategory === null) {
+            $errors[] = 'Choose a project category from the list.';
+        } else {
+            $project['category'] = $matchedCategory;
+        }
+    }
     if (!valid_project_status($project['project_status'])) $errors[] = 'Invalid project status.';
     if ($hasNewImage) {
         $imageError = validate_project_image($_FILES['project_image']);
@@ -83,6 +95,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 }
 
 $pageTitle = 'Edit Project';
+$selectedSkills = cocreate_selected_options($project['required_skills']);
+$skillOptions = cocreate_merge_choice_options($skillOptions, array_keys($selectedSkills));
+$categoryOptions = cocreate_merge_choice_options($categoryOptions, [$project['category'] ?? '']);
 require_once __DIR__ . '/../includes/header.php';
 ?>
 <section class="page-head">
@@ -97,10 +112,16 @@ require_once __DIR__ . '/../includes/header.php';
   <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
   <label>Project title<input required name="project_title" value="<?= e($project['project_title']) ?>"></label>
   <label>Description<textarea required name="description" rows="7"><?= e($project['description']) ?></textarea></label>
-  <div class="two-col">
-    <label>Required skills<input required name="required_skills" value="<?= e($project['required_skills']) ?>"></label>
-    <label>Category<input required name="category" value="<?= e($project['category']) ?>"></label>
-  </div>
+  <?php render_choice_fieldset(
+      'required_skills',
+      'Required skills',
+      $skillOptions,
+      $selectedSkills,
+      'Choose all that apply.',
+      'Add custom skill',
+      true,
+  ); ?>
+  <?php render_project_category_combobox('category', $project['category'], $categoryOptions); ?>
   <label>Project status
     <select name="project_status" required>
       <option value="open" <?= $project['project_status'] === 'open' ? 'selected' : '' ?>>Open</option>

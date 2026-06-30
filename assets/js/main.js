@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupValidation();
   setupImagePreviews();
   setupChoiceFieldsets();
+  setupComboboxes();
   setupLiveProjectFilters();
   animateCounters();
 });
@@ -185,6 +186,19 @@ function setupValidation() {
         event.preventDefault();
         invalid.focus();
         invalid.classList.add("field-error");
+        return;
+      }
+
+      const invalidChoiceGroup = [
+        ...form.querySelectorAll('[data-choice-required="true"]'),
+      ].find(
+        (fieldset) =>
+          !fieldset.querySelector('input[type="checkbox"]:checked'),
+      );
+      if (invalidChoiceGroup) {
+        event.preventDefault();
+        invalidChoiceGroup.classList.add("field-error");
+        invalidChoiceGroup.querySelector("[data-choice-add]")?.focus();
       }
     });
   });
@@ -236,9 +250,28 @@ function setupChoiceFieldsets() {
     const grid = fieldset.querySelector("[data-choice-grid]");
     const input = fieldset.querySelector("[data-choice-input]");
     const addButton = fieldset.querySelector("[data-choice-add]");
+    const addLabel = addButton?.querySelector("[data-choice-add-label]");
     const name = fieldset.dataset.choiceName;
 
     if (!grid || !input || !addButton || !name) return;
+
+    const collapsedLabel = addLabel?.textContent || "Add";
+    const setAdding = (isAdding) => {
+      input.hidden = !isAdding;
+      addButton.classList.toggle("is-active", isAdding);
+      addButton.setAttribute("aria-expanded", String(isAdding));
+      if (addLabel) addLabel.textContent = isAdding ? "Add" : collapsedLabel;
+      if (isAdding) {
+        syncInputWidth();
+        input.focus();
+      }
+    };
+
+    const syncInputWidth = () => {
+      const value = input.value.trim();
+      const chars = Math.max(14, value.length + 2);
+      input.style.width = `${chars}ch`;
+    };
 
     const normalize = (value) => value.trim().toLowerCase();
     const findExisting = (value) =>
@@ -261,11 +294,15 @@ function setupChoiceFieldsets() {
 
       label.append(checkbox, text);
       grid.appendChild(label);
+      fieldset.classList.remove("field-error");
     };
 
     const addChoice = () => {
       const value = input.value.trim();
-      if (!value) return;
+      if (!value) {
+        input.focus();
+        return false;
+      }
 
       const existing = findExisting(value);
       if (existing) {
@@ -274,16 +311,148 @@ function setupChoiceFieldsets() {
         createChoice(value);
       }
 
+      fieldset.classList.remove("field-error");
       input.value = "";
-      input.focus();
+      syncInputWidth();
+      setAdding(false);
+      return true;
     };
 
-    addButton.addEventListener("click", addChoice);
+    syncInputWidth();
+    setAdding(false);
+    addButton.addEventListener("click", (event) => {
+      event.preventDefault();
+      if (input.hidden) {
+        setAdding(true);
+        return;
+      }
+      addChoice();
+    });
+    input.addEventListener("input", syncInputWidth);
     input.addEventListener("keydown", (event) => {
       if (event.key === "Enter") {
         event.preventDefault();
         addChoice();
       }
+      if (event.key === "Escape") {
+        event.preventDefault();
+        input.value = "";
+        syncInputWidth();
+        setAdding(false);
+        addButton.focus();
+      }
+    });
+
+    grid.addEventListener("change", () => fieldset.classList.remove("field-error"));
+  });
+}
+
+function setupComboboxes() {
+  document.querySelectorAll("[data-combobox]").forEach((combobox) => {
+    const input = combobox.querySelector("[data-combobox-input]");
+    const toggle = combobox.querySelector("[data-combobox-toggle]");
+    const list = combobox.querySelector("[data-combobox-list]");
+    const options = [...combobox.querySelectorAll("[data-combobox-option]")];
+    const empty = combobox.querySelector("[data-combobox-empty]");
+    let activeIndex = -1;
+
+    if (!input || !toggle || !list || !options.length) return;
+
+    const visibleOptions = () => options.filter((option) => !option.hidden);
+
+    const setActive = (index) => {
+      const visible = visibleOptions();
+      if (!visible.length || index < 0) {
+        activeIndex = -1;
+      } else {
+        activeIndex = index % visible.length;
+      }
+      options.forEach((option) => option.classList.remove("is-active"));
+      if (activeIndex >= 0) {
+        visible[activeIndex].classList.add("is-active");
+        visible[activeIndex].scrollIntoView({ block: "nearest" });
+      }
+    };
+
+    const openList = () => {
+      list.hidden = false;
+      input.setAttribute("aria-expanded", "true");
+      combobox.classList.add("is-open");
+    };
+
+    const closeList = () => {
+      list.hidden = true;
+      input.setAttribute("aria-expanded", "false");
+      combobox.classList.remove("is-open");
+      setActive(-1);
+    };
+
+    const filterOptions = () => {
+      const query = input.value.trim().toLowerCase();
+      let visibleCount = 0;
+
+      options.forEach((option) => {
+        const matches = option.dataset.value.toLowerCase().includes(query);
+        option.hidden = !matches;
+        if (matches) visibleCount += 1;
+      });
+
+      if (empty) empty.hidden = visibleCount > 0;
+      setActive(visibleCount ? 0 : -1);
+    };
+
+    const selectOption = (option) => {
+      input.value = option.dataset.value;
+      input.classList.remove("field-error");
+      closeList();
+      input.focus();
+    };
+
+    input.addEventListener("focus", () => {
+      filterOptions();
+      openList();
+    });
+    input.addEventListener("input", () => {
+      filterOptions();
+      openList();
+    });
+    input.addEventListener("keydown", (event) => {
+      const visible = visibleOptions();
+      if (event.key === "ArrowDown") {
+        event.preventDefault();
+        if (list.hidden) openList();
+        setActive(activeIndex + 1);
+      }
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        if (list.hidden) openList();
+        setActive(activeIndex - 1);
+      }
+      if (event.key === "Enter" && !list.hidden && activeIndex >= 0) {
+        event.preventDefault();
+        selectOption(visible[activeIndex]);
+      }
+      if (event.key === "Escape") {
+        closeList();
+      }
+    });
+
+    toggle.addEventListener("click", () => {
+      if (list.hidden) {
+        filterOptions();
+        openList();
+        input.focus();
+      } else {
+        closeList();
+      }
+    });
+
+    options.forEach((option) => {
+      option.addEventListener("click", () => selectOption(option));
+    });
+
+    document.addEventListener("click", (event) => {
+      if (!combobox.contains(event.target)) closeList();
     });
   });
 }

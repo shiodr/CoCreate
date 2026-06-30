@@ -170,6 +170,46 @@ function cocreate_interest_options(): array
     ];
 }
 
+function cocreate_project_category_options(): array
+{
+    return [
+        "Web App",
+        "Mobile App",
+        "Open Source",
+        "Campus Tool",
+        "Community Tool",
+        "Creative Media",
+        "Design System",
+        "Game",
+        "Education",
+        "Social Impact",
+        "Research",
+        "Event",
+        "Art",
+        "Music",
+        "Short Film",
+        "Music Video",
+        "Writing",
+    ];
+}
+
+function cocreate_option_exists(string $value, array $options): bool
+{
+    return cocreate_canonical_option($value, $options) !== null;
+}
+
+function cocreate_canonical_option(string $value, array $options): ?string
+{
+    $value = trim($value);
+    foreach ($options as $option) {
+        if (strcasecmp($value, trim((string) $option)) === 0) {
+            return (string) $option;
+        }
+    }
+
+    return null;
+}
+
 function cocreate_merge_choice_options(array $options, array $extra = []): array
 {
     $merged = [];
@@ -218,31 +258,89 @@ function render_choice_fieldset(
     array $selected,
     string $hint = "Choose all that apply.",
     string $customPlaceholder = "Add custom option",
+    bool $required = false
 ): void {
     echo '<fieldset class="choice-group" data-choice-fieldset data-choice-name="' .
         e($name) .
-        '">';
+        '"' .
+        ($required ? ' data-choice-required="true"' : "") .
+        ">";
     echo "<legend>" . e($legend) . "</legend>";
     echo '<p class="field-hint">' . e($hint) . "</p>";
     echo '<div class="choice-grid" data-choice-grid>';
+    $selectedLookup = [];
+    foreach (array_keys($selected) as $selectedOption) {
+        $selectedKey = function_exists("mb_strtolower")
+            ? mb_strtolower($selectedOption, "UTF-8")
+            : strtolower($selectedOption);
+        $selectedLookup[$selectedKey] = true;
+    }
     foreach ($options as $option) {
+        $optionKey = function_exists("mb_strtolower")
+            ? mb_strtolower($option, "UTF-8")
+            : strtolower($option);
         echo '<label class="choice-pill">';
         echo '<input type="checkbox" name="' .
             e($name) .
             '[]" value="' .
             e($option) .
             '"' .
-            (isset($selected[$option]) ? " checked" : "") .
+            (isset($selectedLookup[$optionKey]) ? " checked" : "") .
             ">";
         echo "<span>" . e($option) . "</span>";
         echo "</label>";
     }
     echo "</div>";
     echo '<div class="choice-adder">';
-    echo '<input type="text" data-choice-input placeholder="' .
+    echo '<input class="choice-input" type="text" data-choice-input placeholder="' .
         e($customPlaceholder) .
-        '">';
-    echo '<button class="btn btn-ghost choice-add-button" type="button" data-choice-add>Add</button>';
+        '" aria-label="' .
+        e($customPlaceholder) .
+        '" hidden>';
+    echo '<button class="choice-add-button" type="button" data-choice-add aria-expanded="false" aria-label="' .
+        e($customPlaceholder) .
+        '"><span aria-hidden="true">+</span><span data-choice-add-label>Add</span></button>';
     echo "</div>";
     echo "</fieldset>";
+}
+
+function render_project_category_combobox(
+    string $name,
+    string $value,
+    array $options,
+    string $label = "Category Type"
+): void {
+    $inputId = $name . "-combobox";
+    $listId = $name . "-options";
+
+    echo '<div class="combobox-field">';
+    echo '<label for="' . e($inputId) . '">' . e($label) . "</label>";
+    echo '<span class="field-hint">Type to search, then choose a category.</span>';
+    echo '<div class="combobox" data-combobox>';
+    echo '<input id="' .
+        e($inputId) .
+        '" required name="' .
+        e($name) .
+        '" value="' .
+        e($value) .
+        '" placeholder="Search categories" autocomplete="off" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="' .
+        e($listId) .
+        '" data-combobox-input>';
+    echo '<button class="combobox-toggle" type="button" data-combobox-toggle aria-label="Show categories" aria-controls="' .
+        e($listId) .
+        '"></button>';
+    echo '<div class="combobox-list" id="' .
+        e($listId) .
+        '" role="listbox" data-combobox-list hidden>';
+    foreach ($options as $option) {
+        echo '<button type="button" role="option" class="combobox-option" data-combobox-option data-value="' .
+            e($option) .
+            '">' .
+            e($option) .
+            "</button>";
+    }
+    echo '<p class="combobox-empty" data-combobox-empty hidden>No matching categories</p>';
+    echo "</div>";
+    echo "</div>";
+    echo "</div>";
 }
