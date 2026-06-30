@@ -1,33 +1,27 @@
 <?php
-require_once __DIR__ . '/../includes/session.php';
+require_once __DIR__ . "/../includes/session.php";
 require_login();
-require_once __DIR__ . '/../includes/db.php';
+require_once __DIR__ . "/../includes/db.php";
 
-$assetPrefix = '../';
-$pagePrefix = '';
-$adminPrefix = '../admin/';
+$assetPrefix = "../";
+$pagePrefix = "";
+$adminPrefix = "../admin/";
 
-$recentStmt = $pdo->query('SELECT p.*, u.username FROM projects p JOIN users u ON u.user_id = p.user_id WHERE p.project_status <> "completed" ORDER BY p.created_at DESC LIMIT 6');
+$recentStmt = $pdo->query(
+    'SELECT p.*, u.username FROM projects p JOIN users u ON u.user_id = p.user_id WHERE p.project_status <> "completed" ORDER BY p.created_at DESC LIMIT 6',
+);
 $recent = $recentStmt->fetchAll();
 
-$pageTitle = 'Dashboard';
-require_once __DIR__ . '/../includes/header.php';
+$pageTitle = "Dashboard";
+require_once __DIR__ . "/../includes/header.php";
 ?>
 <section class="page-head">
   <div>
     <p class="eyebrow">Dashboard</p>
-    <h1>Welcome, <?= e($_SESSION['firstname'] ?? 'Creator') ?></h1>
+    <h1>Welcome, <?= e($_SESSION["firstname"] ?? "Creator") ?></h1>
   </div>
   <a class="btn btn-primary" href="create_project.php">Create Project</a>
 </section>
-
-<div class="quick-actions">
-  <a href="browse.php">Browse Projects</a>
-  <a href="create_project.php">Create Project</a>
-  <a href="my_projects.php">My Projects</a>
-  <a href="my_requests.php">Join Requests</a>
-  <a href="profile.php">Profile</a>
-</div>
 
 <section class="section">
   <div class="section-head">
@@ -37,7 +31,7 @@ require_once __DIR__ . '/../includes/header.php';
   <div class="cards-grid">
     <?php foreach ($recent as $project): ?>
       <?php render_project_card($project, [
-          'meta' => 'Created by @' . $project['username'],
+          "meta" => "Created by @" . $project["username"],
       ]); ?>
     <?php endforeach; ?>
     <?php if (!$recent): ?>
@@ -46,6 +40,5 @@ require_once __DIR__ . '/../includes/header.php';
   </div>
 </section>
 
-<?php
-require_once __DIR__ . '/../includes/footer.php';
+<?php require_once __DIR__ . "/../includes/footer.php";
 ?>
