@@ -5,5 +5,6 @@ uploads/*
 uploads/projects/*
 !uploads/projects/.gitkeep
 !uploads/projects/.htaccess
+!uploads/projects/sample_*.svg
 includes/config.php
 .DS_Store

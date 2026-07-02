@@ -10,7 +10,7 @@ $adminPrefix = "../admin/";
 $recentStmt = $pdo->query(
     'SELECT p.*, u.username FROM projects p JOIN users u ON u.user_id = p.user_id WHERE p.project_status <> "completed" ORDER BY p.created_at DESC LIMIT 6',
 );
-$recent = $recentStmt->fetchAll();
+$recent = cocreate_attach_project_links($pdo, $recentStmt->fetchAll());
 
 $pageTitle = "Dashboard";
 require_once __DIR__ . "/../includes/header.php";

@@ -22,6 +22,22 @@ try {
     );
 
     $pdo->exec(
+        "CREATE TABLE IF NOT EXISTS interest_options (
+            interest_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            interest_name VARCHAR(100) NOT NULL UNIQUE,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    );
+
+    $pdo->exec(
+        "CREATE TABLE IF NOT EXISTS project_categories (
+            category_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+            category_name VARCHAR(120) NOT NULL UNIQUE,
+            created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4",
+    );
+
+    $pdo->exec(
         "CREATE TABLE IF NOT EXISTS project_links (
             link_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
             project_id INT UNSIGNED NOT NULL,

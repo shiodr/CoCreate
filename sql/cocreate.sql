@@ -2,6 +2,8 @@ SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS join_requests;
 DROP TABLE IF EXISTS project_requirements;
 DROP TABLE IF EXISTS project_links;
+DROP TABLE IF EXISTS project_categories;
+DROP TABLE IF EXISTS interest_options;
 DROP TABLE IF EXISTS user_skills;
 DROP TABLE IF EXISTS projects;
 DROP TABLE IF EXISTS skills;
@@ -55,6 +57,18 @@ CREATE TABLE projects (
   CONSTRAINT fk_projects_user
     FOREIGN KEY (user_id) REFERENCES users(user_id)
     ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE interest_options (
+  interest_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  interest_name VARCHAR(100) NOT NULL UNIQUE,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+CREATE TABLE project_categories (
+  category_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  category_name VARCHAR(120) NOT NULL UNIQUE,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 CREATE TABLE project_links (
@@ -150,12 +164,47 @@ VALUES
   ('Art direction', 'Media', 'Visual planning and creative direction.'),
   ('Moderation', 'Community', 'Community safety and content review.');
 
-INSERT INTO projects
-  (user_id, project_title, description, required_skills, category, project_status)
+INSERT INTO interest_options
+  (interest_name)
 VALUES
-  (2, 'Portfolio Builder for Student Creatives', 'A simple web app where students can publish portfolios, project notes, and contact details in one place.', 'PHP, CSS, UI design, copywriting', 'Web App', 'open'),
-  (3, 'Campus Event Finder', 'A searchable board for clubs to post workshops, rehearsals, and meetups with filtering by date and topic.', 'JavaScript, MySQL, UX research', 'Community Tool', 'in_progress'),
-  (4, 'Indie Music Video Concept', 'A collaborative music video project needing people who enjoy storyboarding, editing, and production planning.', 'Video editing, writing, art direction', 'Creative Media', 'open');
+  ('Web apps'),
+  ('Open source'),
+  ('Campus tools'),
+  ('Creative tools'),
+  ('Community building'),
+  ('Short films'),
+  ('Music videos'),
+  ('Games'),
+  ('Education'),
+  ('Social impact');
+
+INSERT INTO project_categories
+  (category_name)
+VALUES
+  ('Web App'),
+  ('Mobile App'),
+  ('Open Source'),
+  ('Campus Tool'),
+  ('Community Tool'),
+  ('Creative Media'),
+  ('Design System'),
+  ('Game'),
+  ('Education'),
+  ('Social Impact'),
+  ('Research'),
+  ('Event'),
+  ('Art'),
+  ('Music'),
+  ('Short Film'),
+  ('Music Video'),
+  ('Writing');
+
+INSERT INTO projects
+  (user_id, project_title, description, required_skills, category, project_status, project_image)
+VALUES
+  (2, 'Portfolio Builder for Student Creatives', 'A simple web app where students can publish portfolios, project notes, and contact details in one place.', 'PHP, CSS, UI design, copywriting', 'Web App', 'open', 'uploads/projects/sample_portfolio_builder.svg'),
+  (3, 'Campus Event Finder', 'A searchable board for clubs to post workshops, rehearsals, and meetups with filtering by date and topic.', 'JavaScript, MySQL, UX research', 'Community Tool', 'in_progress', 'uploads/projects/sample_event_finder.svg'),
+  (4, 'Indie Music Video Concept', 'A collaborative music video project needing people who enjoy storyboarding, editing, and production planning.', 'Video editing, writing, art direction', 'Creative Media', 'open', 'uploads/projects/sample_music_video.svg');
 
 INSERT INTO project_links
   (project_id, link_label, link_url, sort_order)

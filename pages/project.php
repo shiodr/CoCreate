@@ -81,15 +81,7 @@ require_once __DIR__ . "/../includes/header.php";
     <p><strong>Category:</strong> <?= e($project["category"]) ?></p>
     <?php if ($projectLinks): ?>
       <h3>Project links</h3>
-      <div class="project-link-stack">
-        <?php foreach ($projectLinks as $link): ?>
-          <a class="project-link-chip" href="<?= e(
-              $link["link_url"],
-          ) ?>" target="_blank" rel="noopener noreferrer"><?= e(
-    $link["link_label"],
-) ?></a>
-        <?php endforeach; ?>
-      </div>
+      <?php render_project_link_stack($projectLinks); ?>
     <?php endif; ?>
   </section>
 

@@ -20,7 +20,7 @@ if (!$user) {
 
 $errors = [];
 $skillOptions = cocreate_skill_options($pdo);
-$interestOptions = cocreate_interest_options();
+$interestOptions = cocreate_interest_options($pdo);
 
 if ($_SERVER["REQUEST_METHOD"] === "POST") {
     check_csrf();
@@ -97,6 +97,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     if (!$errors) {
+        cocreate_persist_skill_options($pdo, $_POST["skills"] ?? []);
+        cocreate_persist_interest_options($pdo, $_POST["interests"] ?? []);
+
         $update = $pdo->prepare(
             "UPDATE users SET firstname = ?, lastname = ?, username = ?, email = ?, profile_picture = ?, skills = ?, interests = ?, bio = ? WHERE user_id = ?",
         );

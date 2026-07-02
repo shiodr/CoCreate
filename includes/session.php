@@ -125,6 +125,24 @@ function cocreate_validate_identity_fields(array $values): array
     return $errors;
 }
 
+function cocreate_database_options(
+    PDO $pdo,
+    string $table,
+    string $column,
+    array $fallback,
+): array {
+    try {
+        $options = $pdo
+            ->query("SELECT $column FROM $table ORDER BY $column")
+            ->fetchAll(PDO::FETCH_COLUMN);
+        return $options
+            ? cocreate_merge_choice_options($fallback, $options)
+            : $fallback;
+    } catch (PDOException $e) {
+        return $fallback;
+    }
+}
+
 function cocreate_skill_options(PDO $pdo): array
 {
     $fallback = [
@@ -144,19 +162,30 @@ function cocreate_skill_options(PDO $pdo): array
         "Moderation",
     ];
 
+    return cocreate_database_options($pdo, "skills", "skill_name", $fallback);
+}
+
+function cocreate_persist_skill_options(PDO $pdo, array $skills): void
+{
+    $skills = cocreate_merge_choice_options([], $skills);
+    if (!$skills) {
+        return;
+    }
+
     try {
-        $options = $pdo
-            ->query("SELECT skill_name FROM skills ORDER BY skill_name")
-            ->fetchAll(PDO::FETCH_COLUMN);
-        return $options ?: $fallback;
+        $stmt = $pdo->prepare(
+            "INSERT INTO skills (skill_name, skill_category, description) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE skill_name = skill_name",
+        );
+        foreach ($skills as $skill) {
+            $stmt->execute([$skill, "Custom", "User-added skill option."]);
+        }
     } catch (PDOException $e) {
-        return $fallback;
     }
 }
 
-function cocreate_interest_options(): array
+function cocreate_interest_options(PDO $pdo): array
 {
-    return [
+    $fallback = [
         "Web apps",
         "Open source",
         "Campus tools",
@@ -168,11 +197,36 @@ function cocreate_interest_options(): array
         "Education",
         "Social impact",
     ];
+
+    return cocreate_database_options(
+        $pdo,
+        "interest_options",
+        "interest_name",
+        $fallback,
+    );
 }
 
-function cocreate_project_category_options(): array
+function cocreate_persist_interest_options(PDO $pdo, array $interests): void
 {
-    return [
+    $interests = cocreate_merge_choice_options([], $interests);
+    if (!$interests) {
+        return;
+    }
+
+    try {
+        $stmt = $pdo->prepare(
+            "INSERT INTO interest_options (interest_name) VALUES (?) ON DUPLICATE KEY UPDATE interest_name = interest_name",
+        );
+        foreach ($interests as $interest) {
+            $stmt->execute([$interest]);
+        }
+    } catch (PDOException $e) {
+    }
+}
+
+function cocreate_project_category_options(PDO $pdo): array
+{
+    $fallback = [
         "Web App",
         "Mobile App",
         "Open Source",
@@ -191,6 +245,33 @@ function cocreate_project_category_options(): array
         "Music Video",
         "Writing",
     ];
+
+    return cocreate_database_options(
+        $pdo,
+        "project_categories",
+        "category_name",
+        $fallback,
+    );
+}
+
+function cocreate_persist_project_category(PDO $pdo, string $category): ?string
+{
+    $category = trim($category);
+    if ($category === "") {
+        return null;
+    }
+
+    try {
+        $stmt = $pdo->prepare(
+            "INSERT INTO project_categories (category_name) VALUES (?) ON DUPLICATE KEY UPDATE category_name = category_name",
+        );
+        $stmt->execute([$category]);
+    } catch (PDOException $e) {
+        return $category;
+    }
+
+    $options = cocreate_project_category_options($pdo);
+    return cocreate_canonical_option($category, $options) ?? $category;
 }
 
 function cocreate_option_exists(string $value, array $options): bool
@@ -392,6 +473,56 @@ function cocreate_fetch_project_links(PDO $pdo, int $projectId): array
     } catch (PDOException $e) {
         return [];
     }
+}
+
+function cocreate_attach_project_links(PDO $pdo, array $items): array
+{
+    if (!$items) {
+        return $items;
+    }
+
+    $projectIds = [];
+    foreach ($items as $item) {
+        $projectId = (int) ($item["project_id"] ?? 0);
+        if ($projectId > 0) {
+            $projectIds[$projectId] = $projectId;
+        }
+    }
+
+    if (!$projectIds) {
+        return $items;
+    }
+
+    $placeholders = implode(", ", array_fill(0, count($projectIds), "?"));
+    $grouped = [];
+
+    try {
+        $stmt = $pdo->prepare(
+            "SELECT project_id, link_label, link_url FROM project_links WHERE project_id IN ($placeholders) ORDER BY sort_order ASC, link_id ASC",
+        );
+        $stmt->execute(array_values($projectIds));
+
+        foreach ($stmt->fetchAll() ?: [] as $link) {
+            $projectId = (int) ($link["project_id"] ?? 0);
+            if ($projectId < 1) {
+                continue;
+            }
+            $grouped[$projectId][] = [
+                "link_label" => (string) ($link["link_label"] ?? ""),
+                "link_url" => (string) ($link["link_url"] ?? ""),
+            ];
+        }
+    } catch (PDOException $e) {
+        return $items;
+    }
+
+    foreach ($items as &$item) {
+        $projectId = (int) ($item["project_id"] ?? 0);
+        $item["project_links"] = $grouped[$projectId] ?? [];
+    }
+    unset($item);
+
+    return $items;
 }
 
 function cocreate_save_project_links(

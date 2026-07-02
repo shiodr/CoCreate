@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="720" viewBox="0 0 1200 720" role="img" aria-labelledby="title desc">
+  <title id="title">Campus Event Finder sample cover</title>
+  <desc id="desc">Gradient cover image for the Campus Event Finder sample project.</desc>
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f766e" />
+      <stop offset="55%" stop-color="#165dff" />
+      <stop offset="100%" stop-color="#ffd166" />
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="720" fill="url(#bg)" rx="40" />
+  <rect x="120" y="130" width="960" height="460" rx="34" fill="rgba(255,255,255,0.12)" stroke="rgba(255,255,255,0.28)" />
+  <rect x="180" y="190" width="400" height="54" rx="18" fill="#ffffff" opacity="0.9" />
+  <rect x="180" y="278" width="210" height="180" rx="24" fill="rgba(255,255,255,0.82)" />
+  <rect x="420" y="278" width="210" height="180" rx="24" fill="rgba(255,255,255,0.7)" />
+  <rect x="660" y="278" width="210" height="180" rx="24" fill="rgba(255,255,255,0.82)" />
+  <rect x="900" y="278" width="120" height="180" rx="24" fill="rgba(255,255,255,0.7)" />
+  <text x="180" y="525" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="66" font-weight="800">Campus Event Finder</text>
+  <text x="180" y="582" fill="rgba(255,255,255,0.9)" font-family="Inter, Arial, sans-serif" font-size="30">Search workshops, rehearsals, and meetups by date and topic</text>
+</svg>

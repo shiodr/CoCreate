@@ -8,7 +8,7 @@ $assetPrefix = "../";
 $pagePrefix = "";
 $adminPrefix = "../admin/";
 $skillOptions = cocreate_skill_options($pdo);
-$categoryOptions = cocreate_project_category_options();
+$categoryOptions = cocreate_project_category_options($pdo);
 
 $id = (int) ($_GET["id"] ?? 0);
 $stmt = $pdo->prepare(
@@ -71,16 +71,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
     if ($project["category"] === "") {
         $errors[] = "Project category is required.";
-    } else {
-        $matchedCategory = cocreate_canonical_option(
-            $project["category"],
-            $categoryOptions,
-        );
-        if ($matchedCategory === null) {
-            $errors[] = "Choose a project category from the list.";
-        } else {
-            $project["category"] = $matchedCategory;
-        }
     }
     if (!valid_project_status($project["project_status"])) {
         $errors[] = "Invalid project status.";
@@ -120,6 +110,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     if (!$errors) {
+        cocreate_persist_skill_options($pdo, $_POST["required_skills"] ?? []);
+        $project["category"] =
+            cocreate_persist_project_category($pdo, $project["category"]) ??
+            $project["category"];
+
         $update = $pdo->prepare(
             "UPDATE projects SET project_title = ?, description = ?, required_skills = ?, category = ?, project_status = ?, project_image = ? WHERE project_id = ? AND user_id = ?",
         );

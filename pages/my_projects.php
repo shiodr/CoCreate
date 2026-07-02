@@ -1,56 +1,66 @@
 <?php
-require_once __DIR__ . '/../includes/session.php';
+require_once __DIR__ . "/../includes/session.php";
 require_login();
-require_once __DIR__ . '/../includes/db.php';
-require_once __DIR__ . '/../includes/uploads.php';
+require_once __DIR__ . "/../includes/db.php";
+require_once __DIR__ . "/../includes/uploads.php";
 
-$assetPrefix = '../';
-$pagePrefix = '';
-$adminPrefix = '../admin/';
+$assetPrefix = "../";
+$pagePrefix = "";
+$adminPrefix = "../admin/";
 
 $uid = current_user_id();
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER["REQUEST_METHOD"] === "POST") {
     check_csrf();
-    $action = $_POST['action'] ?? '';
+    $action = $_POST["action"] ?? "";
 
-    if ($action === 'delete_project') {
-        $projectId = (int)($_POST['project_id'] ?? 0);
-        $imageStmt = $pdo->prepare('SELECT project_image FROM projects WHERE project_id = ? AND user_id = ?');
+    if ($action === "delete_project") {
+        $projectId = (int) ($_POST["project_id"] ?? 0);
+        $imageStmt = $pdo->prepare(
+            "SELECT project_image FROM projects WHERE project_id = ? AND user_id = ?",
+        );
         $imageStmt->execute([$projectId, $uid]);
         $projectImage = $imageStmt->fetchColumn();
-        $stmt = $pdo->prepare('DELETE FROM projects WHERE project_id = ? AND user_id = ?');
+        $stmt = $pdo->prepare(
+            "DELETE FROM projects WHERE project_id = ? AND user_id = ?",
+        );
         $stmt->execute([$projectId, $uid]);
         if ($stmt->rowCount() > 0) {
-            delete_uploaded_file($projectImage ?: null, __DIR__ . '/..');
+            delete_uploaded_file($projectImage ?: null, __DIR__ . "/..");
         }
-        flash('success', 'Project deleted.');
+        flash("success", "Project deleted.");
     }
 
-    if ($action === 'update_request') {
-        $requestId = (int)($_POST['request_id'] ?? 0);
-        $status = $_POST['status'] ?? '';
-        if (in_array($status, ['accepted', 'rejected', 'pending'], true)) {
-            $stmt = $pdo->prepare('UPDATE join_requests jr JOIN projects p ON p.project_id = jr.project_id SET jr.request_status = ? WHERE jr.request_id = ? AND p.user_id = ?');
+    if ($action === "update_request") {
+        $requestId = (int) ($_POST["request_id"] ?? 0);
+        $status = $_POST["status"] ?? "";
+        if (in_array($status, ["accepted", "rejected", "pending"], true)) {
+            $stmt = $pdo->prepare(
+                "UPDATE join_requests jr JOIN projects p ON p.project_id = jr.project_id SET jr.request_status = ? WHERE jr.request_id = ? AND p.user_id = ?",
+            );
             $stmt->execute([$status, $requestId, $uid]);
-            flash('success', 'Request updated.');
+            flash("success", "Request updated.");
         }
     }
 
-    header('Location: my_projects.php');
-    exit;
+    header("Location: my_projects.php");
+    exit();
 }
 
-$projectStmt = $pdo->prepare('SELECT * FROM projects WHERE user_id = ? ORDER BY created_at DESC');
+$projectStmt = $pdo->prepare(
+    "SELECT * FROM projects WHERE user_id = ? ORDER BY created_at DESC",
+);
 $projectStmt->execute([$uid]);
-$projects = $projectStmt->fetchAll();
+$projects = cocreate_attach_project_links($pdo, $projectStmt->fetchAll());
 
-$requestStmt = $pdo->prepare('SELECT jr.*, p.project_title, u.firstname, u.lastname, u.username, u.email, u.skills FROM join_requests jr JOIN projects p ON p.project_id = jr.project_id JOIN users u ON u.user_id = jr.user_id WHERE p.user_id = ? ORDER BY jr.created_at DESC');
+$requestStmt = $pdo->prepare(
+    "SELECT jr.*, p.project_title, u.firstname, u.lastname, u.username, u.email, u.skills FROM join_requests jr JOIN projects p ON p.project_id = jr.project_id JOIN users u ON u.user_id = jr.user_id WHERE p.user_id = ? ORDER BY jr.created_at DESC",
+);
 $requestStmt->execute([$uid]);
 $requests = $requestStmt->fetchAll();
 
-$pageTitle = 'My Projects';
-require_once __DIR__ . '/../includes/header.php';
+$pageTitle = "My Projects";
+require_once __DIR__ . "/../includes/header.php";
 ?>
 <section class="page-head">
   <div>
@@ -66,21 +76,27 @@ require_once __DIR__ . '/../includes/header.php';
     <?php foreach ($projects as $project): ?>
       <?php ob_start(); ?>
       <div class="button-row">
-        <a class="btn btn-secondary" href="edit_project.php?id=<?= (int)$project['project_id'] ?>">Edit</a>
+        <a class="btn btn-secondary" href="edit_project.php?id=<?= (int) $project[
+            "project_id"
+        ] ?>">Edit</a>
         <form method="post" data-confirm="Delete this project? This cannot be undone.">
           <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
           <input type="hidden" name="action" value="delete_project">
-          <input type="hidden" name="project_id" value="<?= (int)$project['project_id'] ?>">
+          <input type="hidden" name="project_id" value="<?= (int) $project[
+              "project_id"
+          ] ?>">
           <button class="btn btn-danger" type="submit">Delete</button>
         </form>
       </div>
       <?php render_project_card($project, [
-          'excerpt_length' => 130,
-          'show_skills' => false,
-          'footer_html' => ob_get_clean(),
+          "excerpt_length" => 130,
+          "show_skills" => false,
+          "footer_html" => ob_get_clean(),
       ]); ?>
     <?php endforeach; ?>
-    <?php if (!$projects): ?><div class="empty-state">You have not created any projects yet.</div><?php endif; ?>
+    <?php if (
+        !$projects
+    ): ?><div class="empty-state">You have not created any projects yet.</div><?php endif; ?>
   </div>
 </section>
 
@@ -95,19 +111,27 @@ require_once __DIR__ . '/../includes/header.php';
         <tbody>
         <?php foreach ($requests as $request): ?>
           <tr>
-            <td><?= e($request['project_title']) ?></td>
+            <td><?= e($request["project_title"]) ?></td>
             <td>
-              <?= e($request['firstname'] . ' ' . $request['lastname']) ?><br>
-              <span class="muted">@<?= e($request['username']) ?> - <?= e($request['skills']) ?></span>
+              <?= e($request["firstname"] . " " . $request["lastname"]) ?><br>
+              <span class="muted">@<?= e($request["username"]) ?> - <?= e(
+     $request["skills"],
+ ) ?></span>
             </td>
-            <td><?= e($request['message'] ?: 'No message provided.') ?></td>
-            <td><span class="status status-<?= e($request['request_status']) ?>"><?= e(status_label($request['request_status'])) ?></span></td>
+            <td><?= e($request["message"] ?: "No message provided.") ?></td>
+            <td><span class="status status-<?= e(
+                $request["request_status"],
+            ) ?>"><?= e(status_label($request["request_status"])) ?></span></td>
             <td>
-              <?php if ($request['request_status'] === 'pending'): ?>
+              <?php if ($request["request_status"] === "pending"): ?>
                 <form class="inline-form" method="post">
-                  <input type="hidden" name="csrf" value="<?= e(csrf_token()) ?>">
+                  <input type="hidden" name="csrf" value="<?= e(
+                      csrf_token(),
+                  ) ?>">
                   <input type="hidden" name="action" value="update_request">
-                  <input type="hidden" name="request_id" value="<?= (int)$request['request_id'] ?>">
+                  <input type="hidden" name="request_id" value="<?= (int) $request[
+                      "request_id"
+                  ] ?>">
                   <button class="btn btn-secondary" name="status" value="accepted">Accept</button>
                   <button class="btn btn-danger" name="status" value="rejected">Reject</button>
                 </form>
@@ -123,6 +147,5 @@ require_once __DIR__ . '/../includes/header.php';
   <?php endif; ?>
 </section>
 
-<?php
-require_once __DIR__ . '/../includes/footer.php';
+<?php require_once __DIR__ . "/../includes/footer.php";
 ?>

@@ -8,7 +8,7 @@ $adminPrefix = "../admin/";
 
 $errors = [];
 $skillOptions = cocreate_skill_options($pdo);
-$interestOptions = cocreate_interest_options();
+$interestOptions = cocreate_interest_options($pdo);
 $old = [
     "firstname" => "",
     "lastname" => "",
@@ -67,6 +67,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     if (!$errors) {
+        cocreate_persist_skill_options($pdo, $_POST["skills"] ?? []);
+        cocreate_persist_interest_options($pdo, $_POST["interests"] ?? []);
+
         $stmt = $pdo->prepare(
             "INSERT INTO users (firstname, lastname, username, email, password_hash, skills, interests) VALUES (?, ?, ?, ?, ?, ?, ?)",
         );

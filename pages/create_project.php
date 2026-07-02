@@ -10,7 +10,7 @@ $adminPrefix = "../admin/";
 
 $errors = [];
 $skillOptions = cocreate_skill_options($pdo);
-$categoryOptions = cocreate_project_category_options();
+$categoryOptions = cocreate_project_category_options($pdo);
 $project = [
     "project_title" => "",
     "description" => "",
@@ -47,16 +47,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
     if ($project["category"] === "") {
         $errors[] = "Project category is required.";
-    } else {
-        $matchedCategory = cocreate_canonical_option(
-            $project["category"],
-            $categoryOptions,
-        );
-        if ($matchedCategory === null) {
-            $errors[] = "Choose a project category from the list.";
-        } else {
-            $project["category"] = $matchedCategory;
-        }
     }
     if (!valid_project_status($project["project_status"])) {
         $errors[] = "Invalid project status.";
@@ -75,6 +65,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     if (!$errors) {
+        cocreate_persist_skill_options($pdo, $_POST["required_skills"] ?? []);
+        $project["category"] =
+            cocreate_persist_project_category($pdo, $project["category"]) ??
+            $project["category"];
+
         $stmt = $pdo->prepare(
             "INSERT INTO projects (user_id, project_title, description, required_skills, category, project_status) VALUES (?, ?, ?, ?, ?, ?)",
         );
