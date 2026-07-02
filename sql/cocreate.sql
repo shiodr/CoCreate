@@ -1,6 +1,7 @@
 SET FOREIGN_KEY_CHECKS = 0;
 DROP TABLE IF EXISTS join_requests;
 DROP TABLE IF EXISTS project_requirements;
+DROP TABLE IF EXISTS project_links;
 DROP TABLE IF EXISTS user_skills;
 DROP TABLE IF EXISTS projects;
 DROP TABLE IF EXISTS skills;
@@ -53,6 +54,18 @@ CREATE TABLE projects (
   created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   CONSTRAINT fk_projects_user
     FOREIGN KEY (user_id) REFERENCES users(user_id)
+    ON DELETE CASCADE ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
+CREATE TABLE project_links (
+  link_id INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+  project_id INT UNSIGNED NOT NULL,
+  link_label VARCHAR(80) NOT NULL,
+  link_url VARCHAR(2048) NOT NULL,
+  sort_order SMALLINT UNSIGNED NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_project_links_project
+    FOREIGN KEY (project_id) REFERENCES projects(project_id)
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
@@ -143,6 +156,14 @@ VALUES
   (2, 'Portfolio Builder for Student Creatives', 'A simple web app where students can publish portfolios, project notes, and contact details in one place.', 'PHP, CSS, UI design, copywriting', 'Web App', 'open'),
   (3, 'Campus Event Finder', 'A searchable board for clubs to post workshops, rehearsals, and meetups with filtering by date and topic.', 'JavaScript, MySQL, UX research', 'Community Tool', 'in_progress'),
   (4, 'Indie Music Video Concept', 'A collaborative music video project needing people who enjoy storyboarding, editing, and production planning.', 'Video editing, writing, art direction', 'Creative Media', 'open');
+
+INSERT INTO project_links
+  (project_id, link_label, link_url, sort_order)
+VALUES
+  (1, 'GitHub', 'https://github.com/mika/portfolio-builder', 0),
+  (1, 'Figma mockups', 'https://figma.com/file/portfolio-builder', 1),
+  (2, 'Live demo', 'https://campusevents.example.com', 0),
+  (3, 'DeviantArt moodboard', 'https://deviantart.com/ari/art/indie-music-video-moodboard-001', 0);
 
 INSERT INTO user_skills
   (user_id, skill_id, proficiency_level, years_experience)

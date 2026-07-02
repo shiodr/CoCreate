@@ -251,6 +251,215 @@ function cocreate_selected_options(?string $value): array
     return array_flip(split_skill_list($value));
 }
 
+function cocreate_project_link_rows(
+    array $source = [],
+    int $minimumRows = 3,
+): array {
+    $labels = is_array($source["label"] ?? null) ? $source["label"] : [];
+    $urls = is_array($source["url"] ?? null) ? $source["url"] : [];
+    $count = max(count($labels), count($urls), $minimumRows);
+    $rows = [];
+
+    for ($index = 0; $index < $count; $index++) {
+        $rows[] = [
+            "label" => trim((string) ($labels[$index] ?? "")),
+            "url" => trim((string) ($urls[$index] ?? "")),
+        ];
+    }
+
+    return $rows;
+}
+
+function cocreate_project_link_rows_from_links(
+    array $links,
+    int $minimumRows = 3,
+): array {
+    return cocreate_project_link_rows(
+        [
+            "label" => array_column($links, "link_label"),
+            "url" => array_column($links, "link_url"),
+        ],
+        $minimumRows,
+    );
+}
+
+function cocreate_normalize_project_link_url(string $url): ?string
+{
+    $url = trim($url);
+    if ($url === "") {
+        return null;
+    }
+
+    if (!preg_match("~^[a-z][a-z0-9+.-]*://~i", $url)) {
+        $url = "https://" . ltrim($url, "/");
+    }
+
+    if (!filter_var($url, FILTER_VALIDATE_URL)) {
+        return null;
+    }
+
+    $scheme = strtolower((string) parse_url($url, PHP_URL_SCHEME));
+    if (!in_array($scheme, ["http", "https"], true)) {
+        return null;
+    }
+
+    return $url;
+}
+
+function cocreate_resolve_project_link_label(string $label, string $url): string
+{
+    $label = trim($label);
+    if ($label !== "") {
+        return $label;
+    }
+
+    $host = (string) parse_url($url, PHP_URL_HOST);
+    $host = preg_replace("/^www\./i", "", $host) ?? "";
+    return $host !== "" ? $host : "Project link";
+}
+
+function cocreate_validate_project_links(array $rows): array
+{
+    $links = [];
+    $errors = [];
+    $seen = [];
+
+    foreach ($rows as $index => $row) {
+        $label = trim((string) ($row["label"] ?? ""));
+        $url = trim((string) ($row["url"] ?? ""));
+
+        if ($label === "" && $url === "") {
+            continue;
+        }
+
+        if ($url === "") {
+            $errors[] = "Project link #" . ($index + 1) . " needs a URL.";
+            continue;
+        }
+
+        $normalizedUrl = cocreate_normalize_project_link_url($url);
+        if ($normalizedUrl === null) {
+            $errors[] =
+                "Project link #" .
+                ($index + 1) .
+                " must use a valid http or https URL.";
+            continue;
+        }
+
+        $resolvedLabel = cocreate_resolve_project_link_label(
+            $label,
+            $normalizedUrl,
+        );
+        if (
+            function_exists("mb_strlen")
+                ? mb_strlen($resolvedLabel, "UTF-8") > 80
+                : strlen($resolvedLabel) > 80
+        ) {
+            $errors[] =
+                "Project link #" .
+                ($index + 1) .
+                " label must be 80 characters or fewer.";
+            continue;
+        }
+
+        $urlKey = strtolower($normalizedUrl);
+        if (isset($seen[$urlKey])) {
+            continue;
+        }
+
+        $seen[$urlKey] = true;
+        $links[] = [
+            "link_label" => $resolvedLabel,
+            "link_url" => $normalizedUrl,
+        ];
+    }
+
+    return [$links, $errors];
+}
+
+function cocreate_fetch_project_links(PDO $pdo, int $projectId): array
+{
+    if ($projectId < 1) {
+        return [];
+    }
+
+    try {
+        $stmt = $pdo->prepare(
+            "SELECT link_label, link_url FROM project_links WHERE project_id = ? ORDER BY sort_order ASC, link_id ASC",
+        );
+        $stmt->execute([$projectId]);
+        return $stmt->fetchAll() ?: [];
+    } catch (PDOException $e) {
+        return [];
+    }
+}
+
+function cocreate_save_project_links(
+    PDO $pdo,
+    int $projectId,
+    array $links,
+): void {
+    if ($projectId < 1) {
+        return;
+    }
+
+    $delete = $pdo->prepare("DELETE FROM project_links WHERE project_id = ?");
+    $delete->execute([$projectId]);
+
+    if (!$links) {
+        return;
+    }
+
+    $insert = $pdo->prepare(
+        "INSERT INTO project_links (project_id, link_label, link_url, sort_order) VALUES (?, ?, ?, ?)",
+    );
+    foreach (array_values($links) as $index => $link) {
+        $insert->execute([
+            $projectId,
+            $link["link_label"],
+            $link["link_url"],
+            $index,
+        ]);
+    }
+}
+
+function render_project_links_fields(array $rows, int $minimumRows = 3): void
+{
+    $rows = cocreate_project_link_rows(
+        [
+            "label" => array_column($rows, "label"),
+            "url" => array_column($rows, "url"),
+        ],
+        $minimumRows,
+    );
+
+    echo '<fieldset class="project-links-group" data-project-links>';
+    echo "<legend>Project links</legend>";
+    echo '<p class="field-hint">Optional. Add links like GitHub, DeviantArt, portfolios, demos, docs, or any other project URL. If you leave out https://, it will be added automatically.</p>';
+    echo '<div class="project-link-list" data-project-link-list>';
+    foreach ($rows as $row) {
+        echo '<div class="project-link-row" data-project-link-row>';
+        echo '<label>Label<input name="project_links[label][]" value="' .
+            e($row["label"] ?? "") .
+            '" placeholder="GitHub"></label>';
+        echo '<label>URL<input name="project_links[url][]" value="' .
+            e($row["url"] ?? "") .
+            '" inputmode="url" placeholder="github.com/your-project"></label>';
+        echo '<button class="btn btn-ghost project-link-remove" type="button" data-project-link-remove aria-label="Remove this project link">Remove</button>';
+        echo "</div>";
+    }
+    echo "</div>";
+    echo '<div class="project-links-actions"><button class="btn btn-ghost" type="button" data-project-link-add>Add another link</button></div>';
+    echo "<template data-project-link-template>";
+    echo '<div class="project-link-row" data-project-link-row>';
+    echo '<label>Label<input name="project_links[label][]" value="" placeholder="GitHub"></label>';
+    echo '<label>URL<input name="project_links[url][]" value="" inputmode="url" placeholder="github.com/your-project"></label>';
+    echo '<button class="btn btn-ghost project-link-remove" type="button" data-project-link-remove aria-label="Remove this project link">Remove</button>';
+    echo "</div>";
+    echo "</template>";
+    echo "</fieldset>";
+}
+
 function render_choice_fieldset(
     string $name,
     string $legend,
@@ -258,7 +467,7 @@ function render_choice_fieldset(
     array $selected,
     string $hint = "Choose all that apply.",
     string $customPlaceholder = "Add custom option",
-    bool $required = false
+    bool $required = false,
 ): void {
     echo '<fieldset class="choice-group" data-choice-fieldset data-choice-name="' .
         e($name) .
@@ -308,7 +517,7 @@ function render_project_category_combobox(
     string $name,
     string $value,
     array $options,
-    string $label = "Category Type"
+    string $label = "Category Type",
 ): void {
     $inputId = $name . "-combobox";
     $listId = $name . "-options";

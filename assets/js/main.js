@@ -6,6 +6,7 @@ document.addEventListener("DOMContentLoaded", () => {
   setupValidation();
   setupImagePreviews();
   setupChoiceFieldsets();
+  setupProjectLinkFields();
   setupComboboxes();
   setupLiveProjectFilters();
   animateCounters();
@@ -192,8 +193,7 @@ function setupValidation() {
       const invalidChoiceGroup = [
         ...form.querySelectorAll('[data-choice-required="true"]'),
       ].find(
-        (fieldset) =>
-          !fieldset.querySelector('input[type="checkbox"]:checked'),
+        (fieldset) => !fieldset.querySelector('input[type="checkbox"]:checked'),
       );
       if (invalidChoiceGroup) {
         event.preventDefault();
@@ -343,7 +343,51 @@ function setupChoiceFieldsets() {
       }
     });
 
-    grid.addEventListener("change", () => fieldset.classList.remove("field-error"));
+    grid.addEventListener("change", () =>
+      fieldset.classList.remove("field-error"),
+    );
+  });
+}
+
+function setupProjectLinkFields() {
+  document.querySelectorAll("[data-project-links]").forEach((group) => {
+    const list = group.querySelector("[data-project-link-list]");
+    const addButton = group.querySelector("[data-project-link-add]");
+    const template = group.querySelector("[data-project-link-template]");
+
+    if (!list || !addButton || !template) return;
+
+    const focusFirstInput = (row) => {
+      row?.querySelector('input[name="project_links[label][]"]')?.focus();
+    };
+
+    addButton.addEventListener("click", () => {
+      const fragment = template.content.cloneNode(true);
+      list.appendChild(fragment);
+      focusFirstInput(list.lastElementChild);
+    });
+
+    list.addEventListener("click", (event) => {
+      const removeButton = event.target.closest("[data-project-link-remove]");
+      if (!removeButton) return;
+
+      const row = removeButton.closest("[data-project-link-row]");
+      if (!row) return;
+
+      const rows = list.querySelectorAll("[data-project-link-row]");
+      if (rows.length <= 1) {
+        row.querySelectorAll("input").forEach((input) => {
+          input.value = "";
+          input.classList.remove("field-error");
+        });
+        focusFirstInput(row);
+        return;
+      }
+
+      const nextRow = row.nextElementSibling || row.previousElementSibling;
+      row.remove();
+      focusFirstInput(nextRow);
+    });
   });
 }
 

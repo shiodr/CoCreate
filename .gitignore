@@ -7,5 +7,3 @@ uploads/projects/*
 !uploads/projects/.htaccess
 includes/config.php
 .DS_Store
-.agents/skills/
-agent/skills/

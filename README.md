@@ -7,6 +7,7 @@ CoCreate is a PHP and MySQL collaboration platform for finding teammates, postin
 - Register and login with PHP sessions
 - Password storage with `password_hash()`
 - Browse, search, filter, create, edit, and delete projects
+- Add custom project links such as GitHub, DeviantArt, portfolios, demos, or docs
 - Upload optional project images and profile pictures
 - Submit, accept, and reject join requests
 - Edit collaborator profiles with skills, interests, and biography
